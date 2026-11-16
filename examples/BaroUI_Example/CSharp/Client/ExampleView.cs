@@ -28,12 +28,20 @@ namespace BaroUiExample
             Refresh();
         }
 
-        /// <summary>Shows the sample again (the reset button of the page).</summary>
+        /// <summary>Shows the sample again (the reset button of the page), in the language shown now.</summary>
         [UiHandler]
         private void reset()
         {
-            model = ExampleSample.Create();
+            model = ExampleSample.Create(model?.Lang ?? "ru");
             Data = model;
+        }
+
+        /// <summary>The language switch of the header: ru, en or zh. Only the words change; the values the player set stay.</summary>
+        [UiHandler]
+        private void lang(string code)
+        {
+            ExampleSample.Translate(model, code);
+            Refresh();
         }
     }
 }

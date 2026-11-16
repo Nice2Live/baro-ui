@@ -45,6 +45,7 @@ BaroUi.Open<FuelView>(Path.Combine(pkgDir, "UI", "fuel.html"));
 | Переменные | `--имя: …` и `var(--имя, запасное)`; наследуются, могут ссылаться друг на друга |
 | Ключевые слова | `inherit`, `initial`, `unset`, `!important` |
 | Картинки | `url("файл.png")` в `background-image`, `border-image-source`, `<img src>`; путь от папки страницы, не выше пакета (рядом с `filelist.xml`); `sprite(вид:id)` — спрайт игры. Адреса в сети, `data:` и абсолютные пути не принимаются (ничего не скачивается) |
+| Шрифты | `@font-face` со страницы или её таблицы стилей: `font-family`, `src: url("файл.ttf")` (несколько через запятую), `font-weight`, `font-style`; `.ttf` и `.otf`. Раздел «Свои шрифты» |
 | Нет | `calc()`, `rem`, `vw/vh`, `hsl()` |
 
 ## Селекторы
@@ -57,7 +58,7 @@ BaroUi.Open<FuelView>(Path.Combine(pkgDir, "UI", "fuel.html"));
   - `.a:hover + .b`, `.a:hover ~ .b .c`: наведение на `.a` перестилает следующих братьев (для `+` — одного, для `~` — всех) и, если правило идёт дальше потомком, их поддеревья; вставка, удаление и перестановка копий `data-for` перестилают детей контейнера, которым может подойти часть после `+`/`~`. Смена `class`/`style` у элемента: `UiWindow.Restyle` перестилает и следующих за ним братьев, до которых достают такие правила (`StyleEngine.FollowingReached`); пачка изменённых элементов (`RestyleBatch`) перестилает каждого такого брата один раз, а вставка и удаление копий `data-for` (`RestyleStructure`) зовёт перестиль без прохода по братьям, потому что сама перестилает всех достижимых детей: цена линейная, а не квадратичная.
   - Смена состояния (наведение, нажатие, фокус) перестилает только то, что видит правило: сам элемент, а потомков — если правило с этим состоянием стоит в предке (`.card:hover .name`) или потомки наследуют изменившееся значение (`color`, `font-size`, `--переменная`). Правила `:hover` без нужды на предках страницы (`.page:hover …`) стоят дороже: при них весь предок перестилается при каждом входе и выходе указателя.
   - `:has(X)` — относительный селектор: элемент, у которого есть потомок под `X` (`.card:has(.x)`), ребёнок (`.card:has(> .x)`), следующий брат (`.row:has(+ .sel)`) или любой следующий брат (`.row:has(~ .sel)`); `.form:has(:checked)`, `.panel:has(:hover)`, `.a:not(:has(.b))`. Аргумент — один относительный селектор, в нём можно цепочку с комбинаторами (`:has(.a > .b)`) и состояния. Списки (`:has(.a, .b)`), вложенный `:has` и псевдоэлементы в аргументе не поддерживаются: правило пропускается с замечанием. Специфичность — как у аргумента. Смена класса, атрибута, состояния или состава детей перестилает только тех предков и предыдущих братьев, чьи `:has()` могут это видеть (`StyleEngine.AnchorsOf`); страница без `:has()` такой проверки не делает. Цена: `docs/ui/PERF.md`, «Псевдоэлементы и :has()».
-- Нет: `[attr^=…]` и другие операторы атрибутов, `@media`, `@import`, `@font-face` (`@keyframes` есть, см. «Анимации»).
+- Нет: `[attr^=…]` и другие операторы атрибутов, `@media`, `@import` (`@keyframes` есть, см. «Анимации»; `@font-face` есть, см. «Свои шрифты»).
 - Каскад как в браузере: `!important`, затем специфичность, затем порядок; `style=""` сильнее любого селектора.
 
 ### Псевдоэлементы `::before` и `::after`
@@ -65,7 +66,7 @@ BaroUi.Open<FuelView>(Path.Combine(pkgDir, "UI", "fuel.html"));
 - `.a::before { … }` (и старая запись `:before`) рисует коробку перед содержимым элемента, `::after` — после. Коробка лежит в раскладке как первый или последний ребёнок элемента, но сама не элемент: её нет в дереве, поэтому шаблоны, обработчики и запросы её не видят. Наведение, нажатие и попадание мыши на коробку — это наведение на сам элемент; коробка своих событий не принимает. Один псевдоэлемент на селектор и только в конце: `.a:hover::before` можно, `.a::before .b` и `::before::after` нельзя.
 - `content`: строки в кавычках с CSS-экранированием (`"\201C"`), `attr(имя)` — значение атрибута элемента и `icon(имя)` — значок Lucide по имени (как `data-icon`, `Core/Icons.cs`; если правило не задало `font-family`, шрифт `lucide`). Части склеиваются подряд: `content: "№ " attr(data-id)`. `none` и `normal` — коробки нет. Прочее (`counter()`, `url()`) — коробки нет и одно замечание в журнале.
 - Коробка стилизуется, как элемент: `display` (по умолчанию `inline`; `block`, `inline-block`, `flex` у её ребёнка и т.д.), `position: absolute` с `top`/`left`, `background`, `border`, `border-radius`, `box-shadow`, `width`, `height`, `padding`, `margin`, `transition`. Свойства, которые наследуются (`color`, `font-size`…), берутся у элемента. Состояния элемента действуют и на коробку: `.a:hover::before { color: #f88 }` меняется вместе с наведением на `.a`.
-- Не поддерживаются: `::first-line`, `::first-letter`, `::marker`, `::selection`, `::placeholder`, `counter()`, `counters()`, `content: url(…)`. Пример: `own/BBE_UI/UI/pseudo_demo.html`.
+- Не поддерживаются: `::first-line`, `::first-letter`, `::marker`, `::selection`, `::placeholder`, `counter()`, `counters()`, `content: url(…)`. Пример: `own/BaroUI/UI/pseudo_demo.html`.
 
 ## Свойства
 
@@ -120,7 +121,7 @@ BaroUi.Open<FuelView>(Path.Combine(pkgDir, "UI", "fuel.html"));
 |---|---|
 | `color` | |
 | `font-size` | размер текста (px, u, em, %) |
-| `font-family` | решает первое известное имя списка (кавычки и регистр не важны): `Caveat` (также `cursive`, `handwriting`, `hand`) — рукописный; `'PT Serif'` (также `ptserif`, `serif`, `ui-serif`, `Georgia`, `Times New Roman`, `Times`, `newspaper`) — газетный с настоящим курсивом; `'Noto Sans'` (также `notosans`, `sans-serif`, `ui-sans-serif`, `system-ui`, `sans`, `proportional`, `Arial`, `Helvetica`, `Segoe UI`) — пропорциональный без засечек, с кириллицей, берётся из папки самой игры (`Content/Fonts/NotoSans`, не копируется в пакет; нет файла — моноширинный; одна строка в журнале на семейство, а не на начертание); `JetBrains Mono` (также `jetbrainsmono`, `monospace`, `mono`, `ui-monospace`, `Consolas`, `Courier New`, `Courier`, `Menlo`, `Monaco`) — моноширинный, он же по умолчанию; всё остальное тоже он. `lucide` (также `icons`, `icon`) — шрифт значков `data-icon`, см. «Значки». Шрифты пакета лежат в `own/BBE_UI/Fonts` (OFL). Высота строки считается по метрикам выбранного шрифта |
+| `font-family` | решает первое известное имя списка (кавычки и регистр не важны): `Caveat` (также `cursive`, `handwriting`, `hand`) — рукописный; `'PT Serif'` (также `ptserif`, `serif`, `ui-serif`, `Georgia`, `Times New Roman`, `Times`, `newspaper`) — газетный с настоящим курсивом; `'Noto Sans'` (также `notosans`, `sans-serif`, `ui-sans-serif`, `system-ui`, `sans`, `proportional`, `Arial`, `Helvetica`, `Segoe UI`) — пропорциональный без засечек, с кириллицей, берётся из папки самой игры (`Content/Fonts/NotoSans`, не копируется в пакет; нет файла — моноширинный; одна строка в журнале на семейство, а не на начертание); `'Noto Sans SC'` (также `Noto Sans CJK SC`, `notosanscjksc`, `notosanssc`, `sans-serif-sc`, `Microsoft YaHei`, `PingFang SC`, `SimHei`, `chinese`) — для китайского текста: Noto Sans иероглифов не содержит, а подстановки шрифта по символам у движка нет, поэтому китайская страница или блок называет это семейство; файлы `NotoSansCJKsc-Medium.otf` и `-Bold.otf` из той же папки игры (400 и 500 берут Medium); `JetBrains Mono` (также `jetbrainsmono`, `monospace`, `mono`, `ui-monospace`, `Consolas`, `Courier New`, `Courier`, `Menlo`, `Monaco`) — моноширинный, он же по умолчанию; всё остальное тоже он. `lucide` (также `icons`, `icon`) — шрифт значков `data-icon`, см. «Значки». Шрифты пакета лежат в `own/BaroUI/Fonts` (OFL). Высота строки считается по метрикам выбранного шрифта |
 | `font-weight` | `normal` (400), `bold` (700), числа 100–900, `bolder`/`lighter` (относительно 400: вес родителя движок пока не берёт). Начертание подбирается по правилам CSS: 500 и 600 есть только у Noto Sans, у остальных ближайшее (500 → 400, 600 → 700) |
 | `font-style` | `italic`/`oblique`: настоящий курсив только у PT Serif обычного веса, у остальных наклон рисуется сдвигом |
 | `line-height` | число или длина |
@@ -166,6 +167,16 @@ BaroUi.Open<FuelView>(Path.Combine(pkgDir, "UI", "fuel.html"));
 - курсивный `font-style: italic` у шрифта без своего курсива (JetBrains Mono, Caveat) рисуется обычным шрифтом размера CSS и растягивается матрицей (нечётко); у `'PT Serif'` курсив настоящий и чёткий;
 - обратный вызов `<canvas>`, который сам читает мышь (`PlayerInput`) или перезапускает пакет, считает в экранных пикселях: берите `SetCanvasMouse`;
 - `UiWindow.BoxOf` отдаёт прямоугольник раскладки (без `translate`, FLIP-сдвига, прокрутки и `scale`): место на экране даёт `ScreenRect(element)`: оно учитывает `translate` (из CSS или числом `SetTranslate`) и сдвиг анимации раскладки самого элемента и каждого предка, прокрутку областей вокруг и вложенные `scale` в том же порядке, как рисует `Painter` (`Core/ScreenMap.cs`); так же считаются каретка и прямоугольник IME поля, подсказка `title`, список `<select>`, полоса прокрутки и зона мыши поля `range`;
+
+## Скругление детей по overflow
+
+Блок с `overflow: hidden`, `auto` или `scroll` по обеим осям и с `border-radius` режет детей по скруглению, если хотя бы один ребёнок заходит в угол: фон, рамки, картинки, текст, прокрутка, липкие строки. Ничего в разметке не нужно. Блоки без захода в угол и блоки с обрезкой по одной оси рисуются как раньше, прямоугольником.
+
+- Содержимое берётся из раскладки этого же кадра (проход идёт после обновления окна).
+- Не больше 32 таких блоков на окно за кадр; остальные режутся прямоугольником, в журнал пишется число.
+- Блок внутри `scale` режется прямоугольником; текст самого блока (не детей) тоже.
+- Нажатия и наведение работают по раскладке, как всегда.
+- Не проверено в игре; ui_host показывает (`docs/ui/PERF.md`).
 
 ## Анимации
 
@@ -233,7 +244,7 @@ BaroUi.Open<FuelView>(Path.Combine(pkgDir, "UI", "fuel.html"));
 
 ## Ввод: мышь на холсте, редактор кода, картинки, файлы
 
-Этап D: примитивы для окон, которым мало полей и кнопок (менеджер модов: карта сборки, окна кода, спрайты модов). Всё в `own/BBE_UI`; проверки: `tools/ui_test` (группы «canvas mouse», «code editor», «pictures and files»), в игре страница `UI/inputs.html` (`baroui open inputs`; самотест `Api/SelfTestInput.cs`).
+Этап D: примитивы для окон, которым мало полей и кнопок (менеджер модов: карта сборки, окна кода, спрайты модов). Всё в `own/BaroUI`; проверки: `tools/ui_test` (группы «canvas mouse», «code editor», «pictures and files»), в игре страница `UI/inputs.html` (`baroui open inputs`; самотест `Api/SelfTestInput.cs`).
 
 ### Мышь на элементах: `data-mouse`, `SetMouse`
 
@@ -448,7 +459,7 @@ Window.SetFileInput("sprite", f => { Load(f.Path ?? SaveImage(f)); return true; 
 
 ## Графики: набор рисования, `<curve>`, `<chart>`, `<gauge>`
 
-Полоса E (`docs/ui/DESIGN_CHARTS.md`). Геометрия и правила — `Core` (тесты в `tools/ui_test`, `DrawKitTests`, `ChartTests`); рисование — `Render/UiDraw.cs`, `Render/UiCharts.cs`. Страница-пример: `UI/charts.html` с данными `UI/charts.data.json`, снимок: `tools/ui_host --page own/BBE_UI/UI/charts.html --data own/BBE_UI/UI/charts.data.json --frames 90`.
+Полоса E (`docs/ui/DESIGN_CHARTS.md`). Геометрия и правила — `Core` (тесты в `tools/ui_test`, `DrawKitTests`, `ChartTests`); рисование — `Render/UiDraw.cs`, `Render/UiCharts.cs`. Страница-пример: `UI/charts.html` с данными `UI/charts.data.json`, снимок: `tools/ui_host --page own/BaroUI/UI/charts.html --data own/BaroUI/UI/charts.data.json --frames 90`.
 
 ### Набор рисования: `Window.Drawing` в `SetCanvas`
 
@@ -531,6 +542,31 @@ Window.SetCanvas("pad", (sb, r) =>
 3. **Файл-картинка** (PNG с прозрачностью): `background-image: url("icons.png")` с `background-position` и `background-size`, как лист спрайтов: блок размером с значок, `background-position: -32px -64px`, `background-repeat: no-repeat`. Растровый, поэтому при масштабе мягчеет.
 4. Другие иконочные шрифты (Material Symbols, Phosphor) не подключены; Lucide выше закрывает то же.
 
+## Свои шрифты: `@font-face`, `BaroUi.RegisterFont`
+
+Шрифт мода — файл `.ttf` или `.otf` в пакете мода (папка `Fonts/`; лицензию OFL или свою положите рядом). Пример: `own/BaroUI_Example` (`Fonts/Caveat-Bold.ttf`, заголовок в `UI/example.css`).
+
+```css
+@font-face {
+  font-family: "Мой шрифт";
+  src: url("../Fonts/MyFont-Regular.ttf") format("truetype"), url("../Fonts/MyFont.otf");
+  font-weight: 400;      /* normal, bold, 1..1000 */
+  font-style: normal;    /* normal, italic, oblique */
+}
+@font-face { font-family: "Мой шрифт"; src: url("../Fonts/MyFont-Bold.ttf"); font-weight: bold; }
+h1 { font-family: "Мой шрифт", sans-serif; }
+```
+
+- Путь к файлу — от папки страницы (`UI/`), как у картинок (`ImageCss.ResolvePath`): внутри пакета (рядом с `filelist.xml`), не выше него. Адреса в сети, `data:`, `file:` и абсолютные пути не принимаются; ничего не скачивается.
+- `src` — список `url(...)` через запятую: берётся первый читаемый. `format(...)` игнорируется; `local()` не поддерживается (пропускается с замечанием).
+- Блоки с одним семейством — разные начертания: `font-weight` (число 1..1000, `normal` 400, `bold` 700; диапазон `100 900` даёт первое число с замечанием) и `font-style` (`italic`, `oblique`). Выбор начертания тот же, что у встроенных семейств: ближайший вес; курсива нет в файле — наклон. Дескрипторы `font-display`, `unicode-range` и прочие не поддерживаются (замечание, блок остаётся).
+- Метрики (высота строки) берутся из таблиц файла (`hhea`, иначе `OS/2`), без внешней библиотеки. Файл — TrueType или OpenType с CFF; коллекции `.ttc`, WOFF и WOFF2 не принимаются.
+- Область видимости: семейство видно окнам, чьи таблицы стилей его объявляют. В окне оно перекрывает встроенное семейство с тем же именем только в этом окне; глобальная таблица (`Core/FontFamilies.cs`) не меняется.
+- Нет файла или он не читается: семейство не появляется; список `font-family` идёт к следующему имени, потом к шрифту по умолчанию. Одна строка в `baroui problems` (`bbe_ui problems`) на правило.
+- Память: шрифты мода идут через тот же кэш, что встроенные (`Core/FontCache.cs`); закрытое окно отдаёт свои грани (`UiFonts.Release`), и они уходят по обычным правилам (простой, предел). Последний шрифт файла остаётся якорем, как у встроенных.
+
+Из C#, для кода мода: `BaroUi.RegisterFont(string family, string file, int weight = 400, bool italic = false)` — путь абсолютный (файл вашего пакета), действует на окна, открытые после вызова. Имя семейства — одно (без запятых). Неверные аргументы бросают `ArgumentException`; отсутствующий файл — строка в `problems` окна, как у CSS. Список: `docs/ui/API.md`.
+
 ## Шаблоны и события
 
 | Разметка | Что делает |
@@ -541,7 +577,7 @@ Window.SetCanvas("pad", (sb, r) =>
 | `data-class="low: fuel < 20; warn: alarm"` | классы по условиям |
 | `data-disabled="busy"` | `disabled` по условию |
 | `data-model="name"` | поле ↔ данные в обе стороны |
-| `data-t="id"`, `data-t-title="id"`, `data-t-placeholder="id"` | перевод: текст по id берётся из `TextManager` игры (`Api/BaroUi.cs`). Пакет добавляет свои тексты так же, как `own/BBE_Mods`: в `filelist.xml` строкой `<Text file="%ModDir%/Localization/English.xml" />` (и `Russian.xml`); сам `own/BBE_UI` текстов не несёт, папки `Localization` у него нет. Так подключены соседние пакеты; в игре с этой страницей не проверено. Подставляется в элемент вместо его содержимого, в атрибут `title`/`placeholder` (любой `data-t-<атрибут>`). В тексте можно `{{…}}`: он связывается после подстановки. Нет текста с таким id: замечание страницы (`baroui problems`), элемент остаётся как в разметке. Подставляется при чтении страницы, поэтому страница, открытая после смены языка, уже на новом |
+| `data-t="id"`, `data-t-title="id"`, `data-t-placeholder="id"` | перевод: текст по id берётся из `TextManager` игры (`Api/BaroUi.cs`). Пакет добавляет свои тексты так же, как `own/BBE_Mods`: в `filelist.xml` строкой `<Text file="%ModDir%/Localization/English.xml" />` (и `Russian.xml`); сам `own/BaroUI` текстов не несёт, папки `Localization` у него нет. Так подключены соседние пакеты; в игре с этой страницей не проверено. Подставляется в элемент вместо его содержимого, в атрибут `title`/`placeholder` (любой `data-t-<атрибут>`). В тексте можно `{{…}}`: он связывается после подстановки. Нет текста с таким id: замечание страницы (`baroui problems`), элемент остаётся как в разметке. Подставляется при чтении страницы, поэтому страница, открытая после смены языка, уже на новом |
 | `onclick="craft(r.id)"`, `oninput`, `onchange`, `onenter`, `onfocus`, `onblur`, `onclose`, `onsave` (Ctrl+S в `<textarea>`) | методы `[UiHandler]` класса окна; аргументы — выражения, `this` — сам элемент |
 | `onpick="pick($arg)"` | `<chart>`: щелчок по точке или столбику; индекс передаётся обработчику как `$arg` и пишется в `data-picked` до вызова |
 | `close()`, `showModal(id)`, `closeDialog(id?)`, `focus(id)` | встроенные обработчики |
@@ -559,7 +595,7 @@ Window.SetCanvas("pad", (sb, r) =>
 | `baroui anim fps N\|max` | частота выборки анимируемых длин по умолчанию (30); `max` — каждый кадр. Своё значение блока `layout-fps` главнее |
 | `baroui debug [on\|off]` | контуры всех блоков; под мышью — поля (оранжевые), отступы (зелёные), содержимое (синее), селектор, размеры в u и px, строка в HTML; плашка ошибок |
 | `baroui problems [page]` | все замечания окна в консоль: `файл:строка: текст` |
-| `baroui src <папка>\|off` | брать страницы из рабочей копии (например `own/BBE_UI/UI` репозитория), а не из установленного пакета |
+| `baroui src <папка>\|off` | брать страницы из рабочей копии (например `own/BaroUI/UI` репозитория), а не из установленного пакета |
 
 **Эталонные снимки страниц** — без игры, на `ui_host` (нужна сборка `tools/ui_host`, игра не запускается; шрифт Noto Sans берётся из папки игры, только чтением). **Эталонов пока нет**: `tools/ui_host/refs` не создана, поэтому каждая страница сейчас даёт `FAIL ... no reference`. Создать: собрать `ui_host`, посмотреть `tools/ui_host/out/*.png`, затем `snap.py --update` (запишет `refs/` и `manifest.json`; `manifest.json` помнит, был ли при записи Noto Sans):
 

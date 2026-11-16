@@ -21,7 +21,7 @@ namespace BaroUI
 
         /// <summary>The engine's version (semver, docs/ui/API.md). The same number is in filelist.xml modversion: change both together.
         /// A consumer checks it at start with Requires.</summary>
-        public static readonly System.Version Version = new System.Version(0, 2, 0);
+        public static readonly System.Version Version = new System.Version(0, 3, 0);
 
         /// <summary>A consumer's check at start: true when the engine is at least minVersion ("0.2.0"). When it is older, or minVersion does not
         /// parse, one line goes to the console log naming modName and the versions, and false comes back: the mod then leaves its UI off.</summary>
@@ -46,6 +46,13 @@ namespace BaroUI
         /// <summary>Folder of the BBE UI package (fonts, UI/ pages).</summary>
         public static string PackageDir { get; private set; }
         public static UiFonts Fonts => fonts ??= new UiFonts(PackageDir);
+
+        /// <summary>A font file of a mod, for the windows opened afterwards (not the open ones): the family name a page uses in font-family, the absolute
+        /// path of the .ttf or .otf inside the mod's own package, the weight (1..1000, 400 normal, 700 bold) and italic. The file is read when a window
+        /// opens: a missing or unreadable one is one line in bbe_ui problems and the family is not there (the next name of the list, then the default).
+        /// A window's own @font-face of the same family adds faces to it and shadows the built-in family of that name in that window only. Throws
+        /// ArgumentException for a family that is not one name or a path that is not absolute. Docs: docs/ui/API.md.</summary>
+        public static void RegisterFont(string family, string file, int weight = 400, bool italic = false) => BaroUI.Core.FontScope.Register(family, file, weight, italic);
         public static IReadOnlyList<UiWindow> Windows => windows;
         internal static bool EscapeHooked { get; private set; }
 
@@ -74,6 +81,10 @@ namespace BaroUI
                 harmony.Patch(side4, prefix: new HarmonyMethod(typeof(BaroUi), nameof(SideBackPrefix)));
                 harmony.Patch(side5, prefix: new HarmonyMethod(typeof(BaroUi), nameof(SideForwardPrefix)));
             }
+            // the start of every frame of the game, before the game draws anything: the pre-pass of the rounded overflow clip (PrePass)
+            var draw = AccessTools.Method(typeof(GameMain), "Draw", new[] { typeof(Microsoft.Xna.Framework.GameTime) });
+            if (draw == null) { UiPlugin.Log("ERROR hook target GameMain.Draw(GameTime) not found: rounded overflow blocks keep the rectangular clip"); }
+            else { harmony.Patch(draw, prefix: new HarmonyMethod(typeof(BaroUi), nameof(FramePrefix))); }
             DebugConsole.Commands.RemoveAll(c => c.Names.Contains(Command.ToIdentifier()) || c.Names.Contains(OldCommand.ToIdentifier()));
             DebugConsole.Commands.Add(new DebugConsole.Command($"{Command}|{OldCommand}",
                 $"{Command} (or {OldCommand}) open <page> | close [page] | reload [page] | list | version | watch [on|off] | debug [on|off] | problems [page] | src [dir|off] (docs/ui/AUTHORING.md).", OnCommand));
@@ -91,6 +102,8 @@ namespace BaroUI
             harmony = null;
             fonts?.Dispose();
             fonts = null;
+            prePassBatch?.Dispose();
+            prePassBatch = null;
             DebugConsole.Commands.RemoveAll(c => c.Names.Contains(Command.ToIdentifier()) || c.Names.Contains(OldCommand.ToIdentifier()));
         }
 
@@ -190,6 +203,42 @@ namespace BaroUI
         }
 
         internal static void AfterDraw(UiWindow w, SpriteBatch sb) => SelfTest.AfterDraw(w, sb);
+
+        private static SpriteBatch prePassBatch;
+        private static bool prePassFailed;
+
+        /// <summary>A prefix on GameMain.Draw: the first thing of the game's frame, before any drawing to the back buffer (the game's Draw only starts a timer
+        /// before it draws, BbePipeline.DrawBegin). Never throws into the game: a failure is logged once and the frame goes on with the rectangular clip.</summary>
+        private static void FramePrefix()
+        {
+            try
+            {
+                var gd = GameMain.Instance?.GraphicsDevice;
+                if (gd != null) { PrePass(gd); }
+            }
+            catch (Exception e)
+            {
+                if (prePassFailed) { return; }
+                prePassFailed = true;
+                UiPlugin.Log($"rounded overflow pre-pass failed, the rectangular clip is used: {e}");
+            }
+        }
+
+        /// <summary>The start of a frame on this device: every open window (free and hosted) renders the children of its rounded overflow blocks into their
+        /// targets (UiWindow.PrePass). Allocates nothing when no window has a rounded block; the device's render target, viewport and scissor are the same after.</summary>
+        internal static void PrePass(GraphicsDevice gd)
+        {
+            if (windows.Count == 0 && hosted.Count == 0) { return; }
+            prePassBatch ??= new SpriteBatch(gd);
+            for (int i = 0; i < windows.Count; i++) { PrePassWindow(windows[i]); }
+            for (int i = 0; i < hosted.Count; i++) { PrePassWindow(hosted[i]); }
+        }
+
+        private static void PrePassWindow(UiWindow w)
+        {
+            try { w.PrePass(prePassBatch); }
+            catch (Exception e) { w.Fail(e); }
+        }
 
         private static void AddWindowsPrefix()
         {

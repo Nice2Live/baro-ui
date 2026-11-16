@@ -6,6 +6,10 @@ namespace BaroUiExample
     /// the page binds to the names (case does not matter: sub.depth, batteries[0].pct). Change a value in C#, then call Refresh.</summary>
     public sealed class ExampleModel
     {
+        /// <summary>The language of the page: ru, en or zh (the switch in the header).</summary>
+        public string Lang { get; set; } = "ru";
+        /// <summary>The page texts of that language (t.title, t.depth, ...): ExampleTexts.Page.</summary>
+        public Dictionary<string, object> T { get; set; } = new Dictionary<string, object>();
         public SubInfo Sub { get; set; } = new SubInfo();
         public PowerInfo Power { get; set; } = new PowerInfo();
         public List<Battery> Batteries { get; set; } = new List<Battery>();
@@ -19,7 +23,7 @@ namespace BaroUiExample
 
     public sealed class SubInfo
     {
-        public string Name { get; set; } = "Нарвал / Narwhal";
+        public string Name { get; set; } = "";
         public double Depth { get; set; } = 212;
         public double Speed { get; set; } = 4.5;
         public double Hull { get; set; } = 96;
@@ -43,7 +47,6 @@ namespace BaroUiExample
     {
         public string Id { get; set; } = "";
         public string Name { get; set; } = "";
-        public string En { get; set; } = "";
         public double Hull { get; set; }
         public int Crew { get; set; }
         /// <summary>ok, warn or bad: the row's pill and its class follow it.</summary>

@@ -63,11 +63,11 @@ namespace BaroUI.Render
         {
             if (s.FontSlot is Slot slot && slot.Owner == this) { return slot; }
             // the table picks the family (first known name), the weight face and a real italic when the family has one for that weight
-            var face = Usable(FontFamilies.Resolve(s.Get("font-family"), s.Get("font-weight"), s.Get("font-style"), out bool slant), ref slant);
+            var face = Usable(FontFamilies.ResolveIn(s.Fonts, s.Get("font-family"), s.Get("font-weight"), s.Get("font-style"), out bool slant), ref slant);
             uint size = SizeOf(s);
             ScalableFont font;
             try { font = FontAt(face, size, pin: true); }
-            catch (Exception e) when (face.Game)
+            catch (Exception e) when (face.Game || face.Local)
             {
                 // the file is there but the game could not read it: the same stand-in as for a missing one
                 lock (sync) { if (toldFamily.Add("load|" + face.Family?.Name)) { UiPlugin.Log($"fonts: {face.File} could not be loaded ({e.Message}), using {FontFamilies.Default.Name}"); } }
@@ -75,7 +75,7 @@ namespace BaroUI.Render
                 face = Usable(face, ref slant);
                 font = FontAt(face, size, pin: true);
             }
-            var created = new Slot { Font = font, Face = face, Size = size, Italic = slant, Ascent = face.Family.Ascent, Descent = face.Family.Descent, Owner = this };
+            var created = new Slot { Font = font, Face = face, Size = size, Italic = slant, Ascent = face.Ascent ?? face.Family.Ascent, Descent = face.Descent ?? face.Family.Descent, Owner = this };
             s.FontSlot = created;
             return created;
         }
@@ -88,7 +88,7 @@ namespace BaroUI.Render
         /// <summary>The face itself, or for a game font whose file is not there the default family's face of the same weight and style (one log line per file).</summary>
         private FontFace Usable(FontFace face, ref bool slant)
         {
-            if (!face.Game) { return face; }
+            if (!face.Game && !face.Local) { return face; }
             lock (sync)
             {
                 if (!substitute.TryGetValue(face, out var stand))
@@ -145,6 +145,19 @@ namespace BaroUI.Render
                     try { gone[i].Dispose(); }
                     catch (Exception e) { UiPlugin.Log($"fonts: disposing a font failed: {e.Message}"); }
                 }
+            }
+        }
+
+        /// <summary>The faces of a window that closed (or was replaced by a reload) are no longer in use: their fonts stop being pinned and the cache gives them
+        /// back by its usual rules (Core/FontCache.cs Forget). Their stand-ins are forgotten too.</summary>
+        internal void Release(IEnumerable<FontFace> faces)
+        {
+            var set = new HashSet<FontFace>(faces);
+            if (set.Count == 0) { return; }
+            lock (sync)
+            {
+                cache.Forget(k => set.Contains(k.Item1));
+                foreach (var f in set) { substitute.Remove(f); }
             }
         }
 

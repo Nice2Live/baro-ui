@@ -6,9 +6,9 @@ The console command is `baroui`; the old name `bbe_ui` still works (the engine w
 
 Reference version: 2026-11-16. The Russian version is the master; the English and Simplified Chinese translations are made from this file.
 
-Package: `own/BBE_UI` (namespace `BaroUI`, LuaCs mod via `ModConfig.xml`). Public engine name: Baro-UI (owner decision, 2026-11-15).
+Package: `own/BaroUI` (namespace `BaroUI`, LuaCs mod via `ModConfig.xml`). Public engine name: Baro-UI (owner decision, 2026-11-15).
 
-Sources: `docs/ui/AUTHORING.md` (author guide), `docs/ui/PERF.md`, `docs/ui/AUDIT_STAGE_C.md`, `docs/ui/AUDIT_STAGE_D.md`, `docs/HANDOFF.md` (section 0), `docs/ui/DESIGN_*.md`, code `own/BBE_UI/CSharp/Client` and `own/BBE_UI/CSharp/Shared`, pages `own/BBE_UI/UI/*.html`, tools `tools/ui_host`, `tools/ui_preview`, `tools/ui_test`.
+Sources: `docs/ui/AUTHORING.md` (author guide), `docs/ui/PERF.md`, `docs/ui/AUDIT_STAGE_C.md`, `docs/ui/AUDIT_STAGE_D.md`, `docs/HANDOFF.md` (section 0), `docs/ui/DESIGN_*.md`, code `own/BaroUI/CSharp/Client` and `own/BaroUI/CSharp/Shared`, pages `own/BaroUI/UI/*.html`, tools `tools/ui_host`, `tools/ui_preview`, `tools/ui_test`.
 
 ## 0. How to read this reference
 
@@ -36,7 +36,7 @@ Pipeline (verified in code, call order in `Render/UiWindow.cs`):
 | Stage | Files | What it does |
 |---|---|---|
 | HTML parsing | `Core/HtmlParser.cs`, `Core/Dom.cs` | tree of `Element`/`TextNode`, void tags, raw text for `style`, `script`, `textarea`, entity table |
-| CSS parsing | `Core/CssParser.cs`, `Core/CssValues.cs` | rules, selectors, declarations, `@keyframes`; `@media`, `@import`, `@font-face` are skipped with a note |
+| CSS parsing | `Core/CssParser.cs`, `Core/CssValues.cs` | rules, selectors, declarations, `@keyframes`, `@font-face` (section 7.7); `@media`, `@import` are skipped with a note |
 | data | `Core/Template.cs`, `Core/Expr.cs` | `{{…}}`, `data-for`, `data-if`, `data-class`, `data-model`, `data-t`, handlers |
 | cascade | `Core/StyleEngine.cs` | values, inheritance, `var()`, `!important`, states (`:hover` etc.), style cache |
 | layout | `Core/LayoutEngine.cs`, `Core/LayoutBox.cs` | block, inline, flex, grid, positioning, incremental layout |
@@ -59,7 +59,7 @@ The core (`Core/`) does not depend on the game: its tests run without the game (
 
 ### 1.3. Where it runs
 
-- It is a **LuaCs C# mod**: `own/BBE_UI/ModConfig.xml` loads the `CSharp/Shared` assembly (`IsScript="true"`, `FriendlyName="BaroUI"`) and the `CSharp/Client` assembly (`Target="Client"`, same name) (verified in code: `ModConfig.xml`).
+- It is a **LuaCs C# mod**: `own/BaroUI/ModConfig.xml` loads the `CSharp/Shared` assembly (`IsScript="true"`, `FriendlyName="BaroUI"`) and the `CSharp/Client` assembly (`Target="Client"`, same name) (verified in code: `ModConfig.xml`).
 - The game and LuaCs are hooked through Harmony (verified in code: `Api/BaroUi.cs`, `Init`):
   - prefix on `DebugConsole.AddToGUIUpdateList` — here windows get the frame and input;
   - prefix on the pause menu — Esc (`PauseMenuPrefix`).
@@ -73,7 +73,7 @@ The core (`Core/`) does not depend on the game: its tests run without the game (
 ### 2.1. Package contents
 
 ```
-own/BBE_UI/
+own/BaroUI/
   ModConfig.xml        LuaCs assemblies (Shared and Client, FriendlyName BaroUI)
   filelist.xml         contentpackage "BBE UI", modversion 0.0.1-bbe, corepackage false, gameversion 1.13.5.0
   Xml/sync.xml         empty: the package appears in the server list so the client keeps it above packages that use it
@@ -84,17 +84,17 @@ own/BBE_UI/
   UI/                  pages: *.html and *.css (controls, inputs, charts, anim_demo, pseudo_demo, test)
 ```
 
-(verified in code: contents of the `own/BBE_UI` folders and files; the game version in `filelist.xml` is 1.13.5.0.)
+(verified in code: contents of the `own/BaroUI` folders and files; the game version in `filelist.xml` is 1.13.5.0.)
 
 The Noto Sans font is **not** included in the package: it is read read-only from the installed game folder (`Content/Fonts/NotoSans`) (verified in code: `Core/FontFamilies.cs`).
 
 The package finds itself: `BaroUi.FindPackageDir` looks for an enabled package named `Baro-UI` with the file `Fonts/JetBrainsMono-Regular.ttf` (verified in code: `Api/BaroUi.cs`, `FindPackageDir`).
 
-Build check without the game: `py -X utf8 tools/cscheck.py BBE_UI` (per `docs/HANDOFF.md`, section 3; verified by the presence of the script).
+Build check without the game: `py -X utf8 tools/cscheck.py BaroUI` (per `docs/HANDOFF.md`, section 3; verified by the presence of the script).
 
 ### 2.2. Minimal page
 
-`own/BBE_UI/UI/fuel.html`:
+`own/BaroUI/UI/fuel.html`:
 
 ```html
 <!doctype html>
@@ -113,7 +113,7 @@ Build check without the game: `py -X utf8 tools/cscheck.py BBE_UI` (per `docs/HA
 </html>
 ```
 
-`own/BBE_UI/UI/fuel.css`:
+`own/BaroUI/UI/fuel.css`:
 
 ```css
 .panel { width: 400u; padding: 16u; background-color: #0b1418; border: 1u solid #4a6a6c; border-radius: 6u; }
@@ -399,7 +399,7 @@ All bindings read `Data` (object or dictionary). A template **only reads** data;
 | `data-class="name: condition; name2: condition"` | classes by conditions | an entry without a colon is a note (`Template.cs`, line 132) |
 | `data-disabled="condition"` | `disabled` by condition | |
 | `data-model="path"` | two-way field ↔ data | for `input`, `textarea`, `curve`, `chart`, `gauge`; writes to the model from the code editor happen at most once per frame (per AUTHORING) |
-| `data-t="id"`, `data-t-title="id"`, `data-t-<attribute>="id"` | translation | the text for the id is substituted **when the page is read** (`Core/Localizer.cs`); if there is no text, the page gets a note and the element stays as written in the markup. Source — the game's `TextManager` (`Api/BaroUi.cs`, line 44). The `own/BBE_UI` package has no `Localization` folder (verified from the package contents). Package texts reach `TextManager` the same way as in neighboring packages: with the line `<Text file="%ModDir%/Localization/English.xml" />` in `filelist.xml` (verified in `own/BBE_Mods/filelist.xml` and `own/BBE_Terminal/filelist.xml`); whether the game loads them this way for this page — (not verified in game). The earlier AUTHORING phrase "package text files" was fixed 2026-11-16. Text with `{{…}}` is bound after substitution |
+| `data-t="id"`, `data-t-title="id"`, `data-t-<attribute>="id"` | translation | the text for the id is substituted **when the page is read** (`Core/Localizer.cs`); if there is no text, the page gets a note and the element stays as written in the markup. Source — the game's `TextManager` (`Api/BaroUi.cs`, line 44). The `own/BaroUI` package has no `Localization` folder (verified from the package contents). Package texts reach `TextManager` the same way as in neighboring packages: with the line `<Text file="%ModDir%/Localization/English.xml" />` in `filelist.xml` (verified in `own/BBE_Mods/filelist.xml` and `own/BBE_Terminal/filelist.xml`); whether the game loads them this way for this page — (not verified in game). The earlier AUTHORING phrase "package text files" was fixed 2026-11-16. Text with `{{…}}` is bound after substitution |
 
 Built-in handlers (verified in code: `Render/UiWindow.cs`, lines 153–156):
 
@@ -563,7 +563,7 @@ State performance: `:hover`, `:active`, `:focus`, `:focus-within`, `:dragging`, 
 - Element states also apply to the box: `.a:hover::before { color: #f88 }`.
 - `content`: quoted strings with CSS escapes (`"\201C"`), `attr(name)` — the attribute value, `icon(name)` — a Lucide icon (like `data-icon`, section 7.2; if the rule did not set `font-family`, the font is `lucide`). Parts are concatenated in order: `content: "№ " attr(data-id)`. `none` and `normal` — no box. `counter()`, `counters()`, `url()` — no box and one note in the log (verified in code: `StyleEngine.cs`, line 757).
 - Not supported: `::first-line`, `::first-letter`, `::marker`, `::selection`, `::placeholder`, `counter()`, `counters()`, `content: url(…)`.
-- Example: `own/BBE_UI/UI/pseudo_demo.html` and `pseudo_demo.css`.
+- Example: `own/BaroUI/UI/pseudo_demo.html` and `pseudo_demo.css`.
 
 ### 4.6. Properties
 
@@ -751,8 +751,8 @@ Shadows and rounded corners (per AUTHORING and audit C):
 Rounding and clipping (per AUTHORING and `docs/ui/PERF.md`, section "Rounding by overflow"):
 
 - `overflow: hidden` clips children **by the rectangle, not by the rounding**: children that reach into a corner of a rounded block are visible in the square corner.
-- The clip geometry for rounding exists (`Core/RoundedClip.cs`), but drawing is not enabled: switching the draw target in the middle of a frame wipes the screen (verified with `ui_host`, `PERF.md`).
-- A picture in a rounded card reaches into the corner. This is the same limitation.
+- A block with `overflow: hidden|auto|scroll` on both axes and a `border-radius` clips its whole subtree to the arc when a child reaches into a corner (a pass at the start of the frame, `PERF.md`, section "Rounding by overflow"; not verified in the game). At most 32 such blocks per window per frame; a block inside `scale` and the block's own text are clipped by a rectangle.
+- A picture in a rounded card is clipped to the arc like a child's background (verified on `ui_host` only with a gradient background: pictures are not drawn there).
 
 - **Edge coverage (lane G, 2026-11-16; not verified in game).** The edges of rounded blocks, rings, corners, and circles (`UiDraw.Disc`, corner textures) are computed analytically: the distance from the pixel center to the edge gives coverage through one linear transition 1 px wide (`Core/Coverage.cs`, `Edge`). A straight side on the grid gives exactly 0 or 1, so an arc and a line of the same width match. The earlier 4×4 samples and the power correction of 0.55–0.7 were removed. Thin rings of 1–2 px: partly covered pixels are lifted with powers 0.8 (1 px) and 0.9 (2 px), `Coverage.ThinLift` (verified in code); the values were chosen by calculation, not fitted to a Chrome snapshot. There is no correction above 2 px; fully covered and empty pixels do not change. Limits: masks with a fractional radius are not made (the radius is rounded to an integer px, `Core/Corners.cs`, `CornerPx`); clipping by rounding is not enabled (section 11.1).
 
@@ -1250,7 +1250,7 @@ window.SetDrop("cards", e => { if (e.Phase == UiDropPhase.Cancel) { Reset(e.Sour
 
 ## 6. Charts and drawing: UiDraw, `<curve>`, `<chart>`, `<gauge>`
 
-Geometry and rules are in `Core/` (tests `DrawKitTests`, `ChartTests`, `tools/ui_test`); drawing is in `Render/UiDraw.cs`, `Render/UiCharts.cs` (verified in code). Example page: `own/BBE_UI/UI/charts.html` with data `charts.data.json`; snapshot: `tools/ui_host --page own/BBE_UI/UI/charts.html --data own/BBE_UI/UI/charts.data.json --frames 90` (per AUTHORING).
+Geometry and rules are in `Core/` (tests `DrawKitTests`, `ChartTests`, `tools/ui_test`); drawing is in `Render/UiDraw.cs`, `Render/UiCharts.cs` (verified in code). Example page: `own/BaroUI/UI/charts.html` with data `charts.data.json`; snapshot: `tools/ui_host --page own/BaroUI/UI/charts.html --data own/BaroUI/UI/charts.data.json --frames 90` (per AUTHORING).
 
 Common to charts: `curve`, `chart`, and `gauge` are blocks by the UA rule `curve, chart, gauge { display: block }` (added 2026-11-16, `Core/StyleEngine.cs`, `UserAgentCss`; before that they were `inline`). The size is set by CSS (`height`, `width`). `UI/charts.html` sets `display: block` itself; with the new rule this matches (verified in code; (not verified in game)).
 
@@ -1369,6 +1369,7 @@ Verified in code: `Core/FontFamilies.cs`; per AUTHORING. The first known name in
 | Caveat | `caveat`, `cursive`, `handwriting`, `hand` | `Fonts/Caveat-Regular.ttf`, `-Bold.ttf` | 400, 700 | handwritten; italic is synthetic |
 | PT Serif | `pt serif`, `serif`, `ui-serif`, `georgia`, `times new roman`, `times`, `newspaper` | `Fonts/PTSerif-Regular.ttf`, `-Bold.ttf`, `-Italic.ttf` | 400, 700, italic 400 | true italic only at regular weight |
 | Noto Sans | `noto sans`, `sans-serif`, `ui-sans-serif`, `system-ui`, `sans`, `proportional`, `arial`, `helvetica`, `segoe ui` | **from the game folder**: `Content/Fonts/NotoSans/NotoSans-Regular.ttf`, `-Medium`, `-SemiBold`, `-Bold` | 400, 500, 600, 700 | proportional, with Cyrillic; read-only; no italic (synthetic) |
+| Noto Sans SC | `noto sans sc`, `noto sans cjk sc`, `notosanscjksc`, `notosanssc`, `sans-serif-sc`, `microsoft yahei`, `pingfang sc`, `simhei`, `chinese` | **from the game folder**: `Content/Fonts/NotoSans/NotoSansCJKsc-Medium.otf`, `-Bold.otf` | 500 (also for 400), 700 | Simplified Chinese: Noto Sans has no Chinese glyphs and there is no per-glyph fallback, so Chinese text names this family (verified in code: `Core/FontFamilies.cs`; not verified in game) |
 | Lucide | `lucide`, `icons`, `icon` | `Fonts/Lucide.ttf` | 400 | icons, section 7.2 |
 
 Notes:
@@ -1431,9 +1432,23 @@ Non-breaking pairs for Russian text (`-bbe-ru-glue`) are described in section 4.
 
 ---
 
+### 7.7. Own fonts: `@font-face`, `BaroUi.RegisterFont`
+
+Checked against the code: `Core/CssParser.cs` (`ParseFontFace`, `ParseFaceWeight`), `Core/FontFaces.cs` (`FontFile`, `FontScope`), `Core/FontFamilies.cs` (`ResolveIn`, `FindIn`), `Core/StyleEngine.cs` (`LoadFontFace`, `Adopt`), `Render/UiFonts.cs` (`Resolve`, `Release`), `Core/FontCache.cs` (`Forget`), `Api/BaroUi.cs` (`RegisterFont`). Tests: `tools/ui_test`, `font-faces` (parsing, paths, metrics, family order, `RegisterFont`, cache). The metrics of `Caveat`, `PT Serif`, `JetBrains Mono` and `Lucide` agree with the table in section 7.1 (test). The title of `own/BaroUI_Example` with the mod's file was captured with `tools/ui_host`: without the file (path outside the package) one line in the notes and the fallback font. Not checked in the game: loading a `ScalableFont` from a mod folder and releasing the native faces when a window closes.
+
+- Parsing: `@font-face { font-family; src; font-weight; font-style }`. `src` is a list of `url(...)`; `format(...)` is ignored; `local()` and anything that is not `url` are skipped with a note. `font-weight`: `normal` 400, `bold` 700, a number 1..1000; a range `100 900` gives its first number with a note; anything else 400 with a note. `font-style`: `normal`, `italic`, `oblique`. An unknown descriptor is a note, the block stays. A block without a family, without `src`, or with a name that is not one word is skipped (checked against the code; test).
+- Paths: relative to the page folder, through `ImageCss.ResolvePath` (as pictures): inside the package next to `filelist.xml`; `http:`, `//`, `data:`, `file:` and absolute paths are refused (test `font-face path`). The first `src` that can be read is used.
+- Metrics: `FontFile.TryReadMetrics` reads `head`, `hhea` (else `OS/2` win) for TrueType and OpenType with CFF. Collections (TTC), WOFF and WOFF2 are refused with a reason. The line height of an own font comes from its metrics (`FontFace.Ascent`, `Descent`).
+- Scope: each window has its own `FontScope` (`StyleEngine.FontFaces`). `FontFamilies.FindIn(scope, value)`: the names of the list are tried in order, the window's families first, then the table; the first known one wins. A window with own families does not share its styles with other windows (`StyleEngine.Adopt`), so its styles do not outlive it.
+- No file, or unreadable: the family is not in the scope; the list goes on to the next name, then to `Default` (test `font resolution`). One note per rule (`@font-face X: ...`).
+- Faces: the nearest weight and the synthetic italic are the same as for the built-in families (`FontFamilies.Pick`; test).
+- `BaroUi.RegisterFont(family, file, weight = 400, italic = false)`: applies to the windows opened after the call (the registry is read when a window opens). Throws `ArgumentException` for a family that is not one name (a comma) and for a path that is not absolute. A missing file is a window note `RegisterFont: ...` (test `RegisterFont`).
+- Memory: a font is cached per face and size in `UiFonts` (`FontCache`, as the built-in ones). `UiWindow.Close` and hot reload (`TakeOver`) call `UiFonts.Release`: the fonts are no longer pinned and expire by the cache rules (idle for more than 120 frames, or the `MaxLive` limit). The last font of a file stays as an anchor (rule 5 of `FontCache`), so one `ScalableFont` per mod file stays until another font of the same file appears (not checked in the game: the native face).
+- Limits: no size limit for a file and no limit on the number of faces; the Cyrillic coverage of a mod's file is not checked (the built-in ones were checked when the table was made); a file that disappears while the window is open gives the `Default` stand-in with one log line (not the next name of the list); `RegisterFont` does not check that the path lies in the calling mod's package.
+
 ## 8. C# API: public types and members
 
-Namespaces: `BaroUI.Api` (`BaroUi`, `BaroUiView`), `BaroUI.Core` (parsing, styles, input, geometry), `BaroUI.Render` (`UiWindow`, drawing, controls). All listed members are verified in code (`own/BBE_UI/CSharp/Client`), unless stated otherwise.
+Namespaces: `BaroUI.Api` (`BaroUi`, `BaroUiView`), `BaroUI.Core` (parsing, styles, input, geometry), `BaroUI.Render` (`UiWindow`, drawing, controls). All listed members are verified in code (`own/BaroUI/CSharp/Client`), unless stated otherwise.
 
 The stable public API (one line per member), the engine version and the rules for breaking changes: [`API.md`](API.md) (in Russian). Version check in a mod: `BaroUi.Requires("0.2.0", name)`.
 
@@ -1638,7 +1653,7 @@ Memory: all textures of a window are in one budget (section 10).
 | `baroui problems [page]` | all window notes to the log: `file:line: text` |
 | `baroui anim [on\|off]` | window animations on/off |
 | `baroui anim fps N\|max` | default sampling rate of animated lengths (30); `max` — every frame; a block's `layout-fps` takes precedence |
-| `baroui src <folder>\|off` | take pages from a folder (for example `own/BBE_UI/UI`) instead of the installed package |
+| `baroui src <folder>\|off` | take pages from a folder (for example `own/BaroUI/UI`) instead of the installed package |
 
 Usage line: `Usage: baroui open <page> | close [page] | reload [page] | list | watch [on|off] | debug [on|off] | anim [on|off|fps N|max] | problems [page] | src [dir|off]`.
 
@@ -1653,12 +1668,12 @@ Switches: `on`, `1` — enable; `off`, `0` — disable; no argument — toggle (
 
 ### 9.3. `tools/ui_host` and reference snapshots
 
-- `tools/ui_host` — a console host (`ui_host.csproj`, `Program.cs`, `ModsScenario.cs`, `Script.cs`; `--data` reads through `own/BBE_UI/CSharp/Client/Core/JsonModel.cs`, the same code as `OpenPage`). It draws pages with a real `UiWindow` and `Painter` into PNG; the Noto Sans font is taken from the game folder (read-only) (per AUTHORING; verified from the folder contents).
+- `tools/ui_host` — a console host (`ui_host.csproj`, `Program.cs`, `ModsScenario.cs`, `Script.cs`; `--data` reads through `own/BaroUI/CSharp/Client/Core/JsonModel.cs`, the same code as `OpenPage`). It draws pages with a real `UiWindow` and `Painter` into PNG; the Noto Sans font is taken from the game folder (read-only) (per AUTHORING; verified from the folder contents).
 - Build: `cd tools/ui_host && dotnet build -c Release && cd ../..` (per AUTHORING).
 - Keys: `--page <file>`, `--data <json>`, `--frames N` (per AUTHORING and `snap.py`).
 - Limitation: `ui_host` does not deliver keys to focus (AUTHORING, section "Charts").
 - `tools/ui_host/snap.py` — snapshot comparison:
-  - `PAGES` — list of pages: `controls`, `inputs`, `anim_demo` (from `own/BBE_UI/UI`), `dialog` (`own/BBE_Dialog/UI/dialog.html`), and `toast` (`own/BBE_Toast/UI/toast.html`; these are other packages, not `BBE_UI`).
+  - `PAGES` — list of pages: `controls`, `inputs`, `anim_demo` (from `own/BaroUI/UI`), `dialog` (`own/BBE_Dialog/UI/dialog.html`), and `toast` (`own/BBE_Toast/UI/toast.html`; these are other packages, not `BaroUI`).
   - `SIZE = 960x540`, `FRAMES = 90` (1.5 s of game time).
   - Keys: `--only <name>`, `--update` (write references), `--selftest` (check of the comparison itself), `--tol 8` (per-channel threshold, 0–255), `--share 0.001` (share of differing pixels).
   - Result: exit code 1 on mismatch; `out/diff/<page>.png` (differing pixels in red).
@@ -1843,7 +1858,7 @@ Verified in code: these names are not in `StyleEngine.Initial`, `Shorthands`, `C
 
 **Rules and selectors**
 
-- `@media`, `@import`, `@font-face`, `@supports`, `@layer`, `@container`, `@namespace`. `@keyframes` exists.
+- `@media`, `@import`, `@supports`, `@layer`, `@container`, `@namespace`. `@keyframes` and `@font-face` exist (section 7.7).
 - Attribute operators: `[a^=…]`, `[a$=…]`, `[a*=…]`, `[a~=…]`, `[a|=…]`.
 - Pseudo-elements other than `::before`/`::after`: `::marker`, `::selection`, `::placeholder`, `::first-line`, `::first-letter`.
 - Pseudo-classes: `:link`, `:visited`, `:empty`, `:is()`, `:where()`, `:first-of-type`, `:nth-of-type`, `:lang()`, `:target`, `:scope`, `:required`, `:invalid`, `:placeholder-shown`, `:nth-child(2n+1)` (`an+b` is not parsed, no match).
@@ -1872,7 +1887,6 @@ Verified in code: these names are not in `StyleEngine.Initial`, `Shorthands`, `C
 
 **Drawing and pictures**
 
-- Clipping children by `overflow` along the arc (rounded clipping) — no (geometry exists, drawing is not enabled).
 - Rounding of a background picture and of an `<img>` picture — corners are square.
 - `dashed`/`dotted` outline — solid line.
 - Gradient and shadow on corners with different radii — the shadow and outline use one radius.
@@ -1898,7 +1912,7 @@ Verified in code: these names are not in `StyleEngine.Initial`, `Shorthands`, `C
 **Other**
 
 - JavaScript, `eval`, network, `http(s)://`, `data:`, `file:`, and absolute paths in picture and font addresses.
-- Package fonts: no `@font-face`; only the families from section 7.1.
+- Package fonts: `@font-face` and `BaroUi.RegisterFont` exist (section 7.7); without them only the families from section 7.1.
 - Right-to-left directions, vertical writing — no.
 - Printing, accessibility (screen reading) — no.
 - Smoothing: the edges of arcs, diagonal lines, and corners look sharp (section 11.2).
@@ -1909,7 +1923,6 @@ From the audits and `docs/HANDOFF.md` (section 0, as of 2026-11-16):
 
 | No. | What | Status |
 |---|---|---|
-| 1 | Clipping children by rounding (`overflow` and `border-radius`): geometry exists (`Core/RoundedClip.cs`), drawing is not enabled — switching the draw target in the middle of a frame wipes the screen (verified on `ui_host`) | not done; needs a pass at the start of the frame and `PreserveContents` (not verified) |
 | 2 | Smoothing: roundings and edges that are not on the pixel grid look pixelated and sharp (owner, 2026-11-16) | lane G done 2026-11-16, not verified in game: edges of roundings, rings, and corners — analytic coverage with one linear transition of 1 px (`Core/Coverage.cs`, `Core/Corners.cs`, `Core/RoundedClip.cs`, `Render/Painter.cs`, `Render/UiDraw.cs`). The earlier 4×4 samples and the power correction of 0.55–0.7 were removed. Thin rings of 1–2 px lifted with powers 0.8 and 0.9 (`Coverage.ThinLift`): the values were chosen by calculation (a light line in sRGB at half coverage gives less light than in linear space), not fitted to a Chrome snapshot. Remaining: masks with a fractional radius are not made, the radius is rounded to whole px (`Corners.CornerPx`); page pictures are drawn with `PointClamp` (`UiImages.cs`, around line 180); compare the look with Chrome and in game |
 | 3 | Shadow and gradient during zoom: baking is limited per frame; during fast zoom a shadow may jump or vanish for a frame | done (audit C, items 1–2), not measured in game |
 | 4 | Block shadow and rounded gradient: one radius for the shadow and the outline | recorded (audit C, item 3 — across corners the gradient follows each corner; the shadow and outline do not) |
@@ -1943,7 +1956,7 @@ Collected from `AUTHORING` ("Not verified in game"), `AUDIT_STAGE_C.md` and `AUD
 - **Measurements in game.** Time of baking shadows and gradients; the cost of `:has()`; drawing allocations; the cost of charts per frame.
 - **Map.** All scenarios of the mod manager in the game (`HANDOFF`, stage B6 waits for the game).
 - **LuaCs.** Operation of windows on stock LuaCs — not checked (`HANDOFF`, section 0, line about stock LuaCs).
-- **Package as is.** Build and run of `own/BBE_UI` on LuaCs 1.15.4 (the new plugin) — not verified (`docs/luacs/COMPARE_PLUGIN.md`).
+- **Package as is.** Build and run of `own/BaroUI` on LuaCs 1.15.4 (the new plugin) — not verified (`docs/luacs/COMPARE_PLUGIN.md`).
 
 ---
 
@@ -1953,7 +1966,7 @@ Collected from `AUTHORING` ("Not verified in game"), `AUDIT_STAGE_C.md` and `AUD
 
 - Version in the package's `filelist.xml` — `gameversion="1.13.5.0"` (1.13.4.0 before 2026-11-16).
 - The patch of the LuaCs fork (`forks/LuaCs`, running mods in the menu) was built for game **1.13.5.0** (`docs/HANDOFF.md`, sections 4.1 and 0). The version in the package metadata (1.13.4.0) and the version the fork was built for (1.13.5.0) do not match. What of this matters for the game — not verified (the owner decides which version to write).
-- **Decided by the owner on 2026-11-16:** the package `gameversion` was raised to 1.13.5.0, as for the fork. The earlier note: **Open owner decision** (item 19 of the check, 2026-11-16): do not change `gameversion` in `own/BBE_UI/filelist.xml` (1.13.4.0) until the owner decides which game version the package and the fork are for. Neither the code nor `filelist.xml` was touched during the check.
+- **Decided by the owner on 2026-11-16:** the package `gameversion` was raised to 1.13.5.0, as for the fork. The earlier note: **Open owner decision** (item 19 of the check, 2026-11-16): do not change `gameversion` in `own/BaroUI/filelist.xml` (1.13.4.0) until the owner decides which game version the package and the fork are for. Neither the code nor `filelist.xml` was touched during the check.
 - The new LuaCs plugin (`LuaCsForBarotraumaPlugin`) targets game 1.15.4.0 (`docs/luacs/COMPARE_PLUGIN.md`, section 0).
 
 ### 12.2. LuaCs: BBE fork and stock
@@ -1965,11 +1978,11 @@ Collected from `AUTHORING` ("Not verified in game"), `AUDIT_STAGE_C.md` and `AUD
 | game patches | the fork patches game files: `py -X utf8 tools/engine.py save-patch` before `build client\|server` (the build wipes the patches), then `install-client` (`HANDOFF`, section 3) | not required |
 | branches | `luacs/bbe`, `moonsharp/bbe` in `Nice2Live/Barotrauma-Beyond-the-Europa` (`HANDOFF`, section 0) | — |
 
-The `own/BBE_UI` package sets Harmony prefixes only in `Api/BaroUi.cs` (`harmony.Patch`, lines 45–52): on `DebugConsole.AddToGUIUpdateList` and on the pause menu (section 1.3). No other patches were found in `CSharp/` (verified by searching for `harmony`). Whether these targets match the version the LuaCs runs on — (not verified in code for each version).
+The `own/BaroUI` package sets Harmony prefixes only in `Api/BaroUi.cs` (`harmony.Patch`, lines 45–52): on `DebugConsole.AddToGUIUpdateList` and on the pause menu (section 1.3). No other patches were found in `CSharp/` (verified by searching for `harmony`). Whether these targets match the version the LuaCs runs on — (not verified in code for each version).
 
 ### 12.3. New LuaCs plugin
 
-The new LuaCs plugin (`Luatrauma/LuaCsForBarotraumaPlugin`) is not a fork of the game: it connects through the plugin loader and Harmony, targets game 1.15.4.0, and therefore our fork for 1.13.5 does not carry over directly; `own/BBE_UI` probably loads by its `ModConfig.xml` format and Harmony targets, but it is not verified on 1.15.4 (`docs/luacs/COMPARE_PLUGIN.md`, section 0, items 1–6).
+The new LuaCs plugin (`Luatrauma/LuaCsForBarotraumaPlugin`) is not a fork of the game: it connects through the plugin loader and Harmony, targets game 1.15.4.0, and therefore our fork for 1.13.5 does not carry over directly; `own/BaroUI` probably loads by its `ModConfig.xml` format and Harmony targets, but it is not verified on 1.15.4 (`docs/luacs/COMPARE_PLUGIN.md`, section 0, items 1–6).
 
 ### 12.4. Versions and names
 

@@ -2,6 +2,14 @@
 
 BaroUI follows semantic versioning (see [docs/API.md](docs/API.md)): a breaking change of the public API raises the major version.
 
+## 0.3.0 — 2026-11-16
+
+- Mod fonts: `@font-face { font-family; src: url(...); font-weight; font-style }` with the file in the mod's own package (paths like images, TTF and OTF; metrics read from the file; a family is local to the window that declares it), and `BaroUi.RegisterFont(family, file, weight, italic)` in C#.
+- Rounded clipping: a block with `overflow: hidden|auto|scroll` and `border-radius` clips its children to the rounded shape (drawn at the start of the frame into its own texture, then masked; at most 32 such blocks per window).
+- Font family `Noto Sans SC` (Simplified Chinese) from the game folder.
+- Example mod: every text in three languages (RU / EN / 中文, one at a time), its title in a font shipped with the example (`examples/BaroUI_Example/Fonts`).
+- Published on the Steam Workshop (item 3840968580).
+
 ## 0.2.0 — 2026-11-16 (first release)
 
 The first public release of the engine that grew inside the *Barotrauma: Beyond the Europa* modpack (its working name was BBE UI).

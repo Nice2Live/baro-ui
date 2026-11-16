@@ -1146,8 +1146,9 @@ namespace BaroUI.Render
             // the IME box goes where the field is on screen: compared on screen, so a zoom of a block around the field moves it too
             if (Focus == e)
             {
-                var scr = p.ToScreen(cr);
-                if (cr != focusRect || scr != focusScreen) { focusRect = cr; focusScreen = scr; TextInput.SetTextInputRect(scr); }
+                var abs = p.Abs(cr);   // on screen, also when the paint runs in a rounded target (Painter.Abs)
+                var scr = p.ToScreen(abs);
+                if (abs != focusRect || scr != focusScreen) { focusRect = abs; focusScreen = scr; TextInput.SetTextInputRect(scr); }
             }
             // clip across the padding vertically: a field lower than the font's line keeps its glyphs whole
             int bt = (int)Math.Round(b.Border.Top), bb = (int)Math.Round(b.Border.Bottom);
@@ -1318,7 +1319,7 @@ namespace BaroUI.Render
         private void PaintCanvas(Painter p, LayoutBox b, Rectangle rect, Element e)
         {
             string id = e.Id;
-            if (id != null) { w.CanvasInput.Painted(e, Content(b, rect), p.Xf); }   // the mouse handler (SetCanvasMouse) needs the box even without a draw callback
+            if (id != null) { w.CanvasInput.Painted(e, p.Abs(Content(b, rect)), p.Xf); }   // the mouse handler (SetCanvasMouse) needs the box even without a draw callback
             if (id == null || !canvases.TryGetValue(id, out var draw)) { return; }
             var cr = Content(b, rect);
             if (!p.PushClip(cr, out var saved)) { return; }

@@ -1,24 +1,162 @@
 {
-  "sub": { "name": "Нарвал / Narwhal", "depth": 212, "speed": 4.5, "hull": 96 },
+  "lang": "ru",
+  "t": {
+    "title": "Субмарина «Нарвал»",
+    "subtitle": "Состояние систем",
+    "diving": "Погружение",
+    "refuel": "Дозаправка",
+    "reset": "Сброс",
+    "close": "Закрыть (Esc)",
+    "depth": "Глубина",
+    "depthSub": "метры, зоны 350 и 550",
+    "speed": "Скорость",
+    "heading": "Курс",
+    "knots": "уз",
+    "power": "Мощность",
+    "powerSub": "кВт по часам",
+    "gen": "Генерация",
+    "load": "Нагрузка",
+    "batteries": "Аккумуляторы",
+    "batteriesSub": "заряд, %",
+    "range": "запас около 3 ч",
+    "ballast": "Балласт",
+    "ballastSub": "м³ по глубине",
+    "ballastHint": "Тяните точки, двойной щелчок добавляет новую",
+    "controls": "Управление",
+    "mode": "Режим",
+    "modeAuto": "Автомат",
+    "modeManual": "Ручной",
+    "modeSilent": "Тихий",
+    "modeDive": "Погружение",
+    "trim": "Дифферент",
+    "eco": "Эко",
+    "normal": "Норма",
+    "boost": "Буст",
+    "lights": "Свет",
+    "sonar": "Сонар",
+    "pump": "Помпа",
+    "compartments": "Отсеки",
+    "compartmentsSub": "целостность и экипаж",
+    "colName": "Отсек",
+    "colHull": "Корпус",
+    "colCrew": "Экипаж",
+    "colState": "Статус",
+    "hull": "Корпус",
+    "hullSub": "целостность, %",
+    "hullHint": "Сектор окрашен по зоне значения"
+  },
+  "sub": {
+    "name": "Нарвал",
+    "depth": 212,
+    "speed": 4.5,
+    "hull": 96
+  },
   "power": {
-    "labels": ["00", "04", "08", "12", "16", "20", "24", "28", "32", "36", "40", "44"],
-    "gen": [40, 42, 44, 47, 50, 52, 55, 53, 50, 48, 46, 44],
-    "load": [30, 35, 38, 44, 46, 49, 58, 61, 50, 47, 42, 39]
+    "labels": [
+      "00",
+      "04",
+      "08",
+      "12",
+      "16",
+      "20",
+      "24",
+      "28",
+      "32",
+      "36",
+      "40",
+      "44"
+    ],
+    "gen": [
+      40,
+      42,
+      44,
+      47,
+      50,
+      52,
+      55,
+      53,
+      50,
+      48,
+      46,
+      44
+    ],
+    "load": [
+      30,
+      35,
+      38,
+      44,
+      46,
+      49,
+      58,
+      61,
+      50,
+      47,
+      42,
+      39
+    ]
   },
   "batteries": [
-    { "name": "Аккумулятор A / Battery A", "pct": 82 },
-    { "name": "Аккумулятор B / Battery B", "pct": 64 },
-    { "name": "Аккумулятор C / Battery C", "pct": 23 }
+    {
+      "name": "Аккумулятор A",
+      "pct": 82
+    },
+    {
+      "name": "Аккумулятор B",
+      "pct": 64
+    },
+    {
+      "name": "Аккумулятор C",
+      "pct": 23
+    }
   ],
   "ballast": "0:0.4, 75:1.1, 150:1.9, 225:2.5, 300:2.9",
   "compartments": [
-    { "id": "c1", "name": "Нос", "en": "Bow", "hull": 98, "crew": 4, "state": "ok", "stateText": "В норме / Normal" },
-    { "id": "c2", "name": "Торпедный", "en": "Torpedo", "hull": 91, "crew": 2, "state": "ok", "stateText": "В норме / Normal" },
-    { "id": "c3", "name": "Машинное", "en": "Engine", "hull": 74, "crew": 3, "state": "warn", "stateText": "Течь / Leak" },
-    { "id": "c4", "name": "Корма", "en": "Stern", "hull": 58, "crew": 1, "state": "bad", "stateText": "Отсек закрыт / Sealed" },
-    { "id": "c5", "name": "Центральный пост", "en": "Control room", "hull": 99, "crew": 6, "state": "ok", "stateText": "В норме / Normal" }
+    {
+      "id": "c1",
+      "name": "Нос",
+      "hull": 98,
+      "crew": 4,
+      "state": "ok",
+      "stateText": "В норме"
+    },
+    {
+      "id": "c2",
+      "name": "Торпедный",
+      "hull": 91,
+      "crew": 2,
+      "state": "ok",
+      "stateText": "В норме"
+    },
+    {
+      "id": "c3",
+      "name": "Машинное",
+      "hull": 74,
+      "crew": 3,
+      "state": "warn",
+      "stateText": "Течь"
+    },
+    {
+      "id": "c4",
+      "name": "Корма",
+      "hull": 58,
+      "crew": 1,
+      "state": "bad",
+      "stateText": "Отсек закрыт"
+    },
+    {
+      "id": "c5",
+      "name": "Центральный пост",
+      "hull": 99,
+      "crew": 6,
+      "state": "ok",
+      "stateText": "В норме"
+    }
   ],
-  "systems": { "lights": true, "sonar": true, "pump": false },
+  "systems": {
+    "lights": true,
+    "sonar": true,
+    "pump": false
+  },
   "trim": "normal",
   "mode": "auto"
 }

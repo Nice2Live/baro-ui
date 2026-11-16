@@ -1,23 +1,38 @@
 namespace BaroUiExample
 {
-    /// <summary>The sample model of the page, the same numbers as UI/example.data.json (keep the two in step: the page test reads the JSON).</summary>
+    /// <summary>The sample model of the page in one language, the same numbers and words as UI/example[.en|.zh].data.json (ExampleTexts holds the words;
+    /// the page test reads the JSON files).</summary>
     public static class ExampleSample
     {
-        public static ExampleModel Create()
+        public static ExampleModel Create(string lang = "ru")
         {
-            var m = new ExampleModel();
+            int i = ExampleTexts.Index(lang);
+            var m = new ExampleModel { Lang = ExampleTexts.Langs[i], T = ExampleTexts.Page(lang) };
+            m.Sub.Name = ExampleTexts.SubName[i];
             m.Power.Labels.AddRange(new[] { "00", "04", "08", "12", "16", "20", "24", "28", "32", "36", "40", "44" });
             m.Power.Gen.AddRange(new double[] { 40, 42, 44, 47, 50, 52, 55, 53, 50, 48, 46, 44 });
             m.Power.Load.AddRange(new double[] { 30, 35, 38, 44, 46, 49, 58, 61, 50, 47, 42, 39 });
-            m.Batteries.Add(new Battery { Name = "Аккумулятор A / Battery A", Pct = 82 });
-            m.Batteries.Add(new Battery { Name = "Аккумулятор B / Battery B", Pct = 64 });
-            m.Batteries.Add(new Battery { Name = "Аккумулятор C / Battery C", Pct = 23 });
-            m.Compartments.Add(new Compartment { Id = "c1", Name = "Нос", En = "Bow", Hull = 98, Crew = 4, State = "ok", StateText = "В норме / Normal" });
-            m.Compartments.Add(new Compartment { Id = "c2", Name = "Торпедный", En = "Torpedo", Hull = 91, Crew = 2, State = "ok", StateText = "В норме / Normal" });
-            m.Compartments.Add(new Compartment { Id = "c3", Name = "Машинное", En = "Engine", Hull = 74, Crew = 3, State = "warn", StateText = "Течь / Leak" });
-            m.Compartments.Add(new Compartment { Id = "c4", Name = "Корма", En = "Stern", Hull = 58, Crew = 1, State = "bad", StateText = "Отсек закрыт / Sealed" });
-            m.Compartments.Add(new Compartment { Id = "c5", Name = "Центральный пост", En = "Control room", Hull = 99, Crew = 6, State = "ok", StateText = "В норме / Normal" });
+            foreach (var (name, pct) in ExampleTexts.Batteries) { m.Batteries.Add(new Battery { Name = name[i], Pct = pct }); }
+            foreach (var (id, name, hull, crew, state) in ExampleTexts.Compartments)
+            {
+                m.Compartments.Add(new Compartment { Id = id, Name = name[i], Hull = hull, Crew = crew, State = state, StateText = ExampleTexts.States[state][i] });
+            }
             return m;
+        }
+
+        /// <summary>The words of a model in another language; the numbers the player changed (batteries, ballast, speed, switches) stay.</summary>
+        public static void Translate(ExampleModel m, string lang)
+        {
+            int i = ExampleTexts.Index(lang);
+            m.Lang = ExampleTexts.Langs[i];
+            m.T = ExampleTexts.Page(lang);
+            m.Sub.Name = ExampleTexts.SubName[i];
+            for (int k = 0; k < m.Batteries.Count && k < ExampleTexts.Batteries.Length; k++) { m.Batteries[k].Name = ExampleTexts.Batteries[k].Name[i]; }
+            foreach (var c in m.Compartments)
+            {
+                foreach (var (id, name, _, _, _) in ExampleTexts.Compartments) { if (id == c.Id) { c.Name = name[i]; } }
+                if (ExampleTexts.States.TryGetValue(c.State, out var st)) { c.StateText = st[i]; }
+            }
         }
     }
 }

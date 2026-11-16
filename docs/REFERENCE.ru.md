@@ -4,9 +4,9 @@
 
 Версия справки: 2026-11-16. Мастер-версия на русском; английский и упрощённый китайский переводы делаются с этого файла.
 
-Пакет: `own/BBE_UI` (namespace `BaroUI`, LuaCs-мод через `ModConfig.xml`). Публичное имя движка: Baro-UI (решение владельца, 2026-11-15).
+Пакет: `own/BaroUI` (namespace `BaroUI`, LuaCs-мод через `ModConfig.xml`). Публичное имя движка: Baro-UI (решение владельца, 2026-11-15).
 
-Источники: `docs/ui/AUTHORING.md` (авторский гайд), `docs/ui/PERF.md`, `docs/ui/AUDIT_STAGE_C.md`, `docs/ui/AUDIT_STAGE_D.md`, `docs/HANDOFF.md` (раздел 0), `docs/ui/DESIGN_*.md`, код `own/BBE_UI/CSharp/Client` и `own/BBE_UI/CSharp/Shared`, страницы `own/BBE_UI/UI/*.html`, инструменты `tools/ui_host`, `tools/ui_preview`, `tools/ui_test`.
+Источники: `docs/ui/AUTHORING.md` (авторский гайд), `docs/ui/PERF.md`, `docs/ui/AUDIT_STAGE_C.md`, `docs/ui/AUDIT_STAGE_D.md`, `docs/HANDOFF.md` (раздел 0), `docs/ui/DESIGN_*.md`, код `own/BaroUI/CSharp/Client` и `own/BaroUI/CSharp/Shared`, страницы `own/BaroUI/UI/*.html`, инструменты `tools/ui_host`, `tools/ui_preview`, `tools/ui_test`.
 
 ## 0. Как читать эту справку
 
@@ -34,7 +34,7 @@ BBE UI — собственный движок HTML/CSS для игры Barotrau
 | Этап | Файлы | Что делает |
 |---|---|---|
 | разбор HTML | `Core/HtmlParser.cs`, `Core/Dom.cs` | дерево `Element`/`TextNode`, void-теги, сырой текст у `style`, `script`, `textarea`, таблица сущностей |
-| разбор CSS | `Core/CssParser.cs`, `Core/CssValues.cs` | правила, селекторы, объявления, `@keyframes`; `@media`, `@import`, `@font-face` пропускаются с замечанием |
+| разбор CSS | `Core/CssParser.cs`, `Core/CssValues.cs` | правила, селекторы, объявления, `@keyframes`, `@font-face` (раздел 7.7); `@media`, `@import` пропускаются с замечанием |
 | данные | `Core/Template.cs`, `Core/Expr.cs` | `{{…}}`, `data-for`, `data-if`, `data-class`, `data-model`, `data-t`, обработчики |
 | каскад | `Core/StyleEngine.cs` | значения, наследование, `var()`, `!important`, состояния (`:hover` и др.), кэш стилей |
 | раскладка | `Core/LayoutEngine.cs`, `Core/LayoutBox.cs` | блочная, строчная, flex, grid, позиционирование, инкрементальная раскладка |
@@ -57,7 +57,7 @@ BBE UI — собственный движок HTML/CSS для игры Barotrau
 
 ### 1.3. Где работает
 
-- Это **LuaCs C#-мод**: `own/BBE_UI/ModConfig.xml` подключает сборки `CSharp/Shared` (`IsScript="true"`, `FriendlyName="BaroUI"`) и `CSharp/Client` (`Target="Client"`, то же имя) (проверено по коду: `ModConfig.xml`).
+- Это **LuaCs C#-мод**: `own/BaroUI/ModConfig.xml` подключает сборки `CSharp/Shared` (`IsScript="true"`, `FriendlyName="BaroUI"`) и `CSharp/Client` (`Target="Client"`, то же имя) (проверено по коду: `ModConfig.xml`).
 - Игра и LuaCs перехватываются через Harmony (проверено по коду: `Api/BaroUi.cs`, `Init`):
   - префикс `DebugConsole.AddToGUIUpdateList` — здесь окна получают кадр и ввод;
   - префикс меню паузы — Esc (`PauseMenuPrefix`).
@@ -71,7 +71,7 @@ BBE UI — собственный движок HTML/CSS для игры Barotrau
 ### 2.1. Состав пакета
 
 ```
-own/BBE_UI/
+own/BaroUI/
   ModConfig.xml        сборки LuaCs (Shared и Client, FriendlyName BaroUI)
   filelist.xml         contentpackage "BBE UI", modversion 0.0.1-bbe, corepackage false, gameversion 1.13.5.0
   Xml/sync.xml         пусто: пакет попадает в список сервера, чтобы клиент держал его выше использующих пакетов
@@ -82,17 +82,17 @@ own/BBE_UI/
   UI/                  страницы: *.html и *.css (controls, inputs, charts, anim_demo, pseudo_demo, test)
 ```
 
-(проверено по коду: состав папок и файлов `own/BBE_UI`; версия игры в `filelist.xml` — 1.13.5.0.)
+(проверено по коду: состав папок и файлов `own/BaroUI`; версия игры в `filelist.xml` — 1.13.5.0.)
 
 Шрифт Noto Sans в пакет **не входит**: берётся из папки установленной игры (`Content/Fonts/NotoSans`) только для чтения (проверено по коду: `Core/FontFamilies.cs`).
 
 Пакет находит себя сам: `BaroUi.FindPackageDir` ищет включённый пакет с именем `Baro-UI` и файлом `Fonts/JetBrainsMono-Regular.ttf` (проверено по коду: `Api/BaroUi.cs`, `FindPackageDir`).
 
-Проверка сборки без игры: `py -X utf8 tools/cscheck.py BBE_UI` (по `docs/HANDOFF.md`, раздел 3; проверено по наличию скрипта).
+Проверка сборки без игры: `py -X utf8 tools/cscheck.py BaroUI` (по `docs/HANDOFF.md`, раздел 3; проверено по наличию скрипта).
 
 ### 2.2. Минимальная страница
 
-`own/BBE_UI/UI/fuel.html`:
+`own/BaroUI/UI/fuel.html`:
 
 ```html
 <!doctype html>
@@ -111,7 +111,7 @@ own/BBE_UI/
 </html>
 ```
 
-`own/BBE_UI/UI/fuel.css`:
+`own/BaroUI/UI/fuel.css`:
 
 ```css
 .panel { width: 400u; padding: 16u; background-color: #0b1418; border: 1u solid #4a6a6c; border-radius: 6u; }
@@ -397,7 +397,7 @@ IME: движок отдаёт игре прямоугольник поля на
 | `data-class="имя: условие; имя2: условие"` | классы по условиям | запись без двоеточия — замечание (`Template.cs`, строка 132) |
 | `data-disabled="условие"` | `disabled` по условию | |
 | `data-model="путь"` | поле ↔ данные в обе стороны | для `input`, `textarea`, `curve`, `chart`, `gauge`; запись в модель редактора кода — не чаще раза за кадр (по AUTHORING) |
-| `data-t="id"`, `data-t-title="id"`, `data-t-<атрибут>="id"` | перевод | текст по id подставляется **при чтении страницы** (`Core/Localizer.cs`); нет текста — замечание страницы, элемент остаётся как в разметке. Источник — `TextManager` игры (`Api/BaroUi.cs`, строка 44). В пакете `own/BBE_UI` папки `Localization` нет (проверено по составу пакета). Тексты пакета попадают в `TextManager` так же, как у соседних пакетов: строкой `<Text file="%ModDir%/Localization/English.xml" />` в `filelist.xml` (проверено по `own/BBE_Mods/filelist.xml` и `own/BBE_Terminal/filelist.xml`); что игра грузит их так именно для этой страницы, в игре не проверено. Прежняя фраза AUTHORING «файлы текстов пакета» исправлена 2026-11-16. Текст с `{{…}}` связывается после подстановки |
+| `data-t="id"`, `data-t-title="id"`, `data-t-<атрибут>="id"` | перевод | текст по id подставляется **при чтении страницы** (`Core/Localizer.cs`); нет текста — замечание страницы, элемент остаётся как в разметке. Источник — `TextManager` игры (`Api/BaroUi.cs`, строка 44). В пакете `own/BaroUI` папки `Localization` нет (проверено по составу пакета). Тексты пакета попадают в `TextManager` так же, как у соседних пакетов: строкой `<Text file="%ModDir%/Localization/English.xml" />` в `filelist.xml` (проверено по `own/BBE_Mods/filelist.xml` и `own/BBE_Terminal/filelist.xml`); что игра грузит их так именно для этой страницы, в игре не проверено. Прежняя фраза AUTHORING «файлы текстов пакета» исправлена 2026-11-16. Текст с `{{…}}` связывается после подстановки |
 
 Built-in обработчики (проверено по коду: `Render/UiWindow.cs`, строки 153–156):
 
@@ -561,7 +561,7 @@ Built-in обработчики (проверено по коду: `Render/UiWin
 - Состояния элемента действуют и на коробку: `.a:hover::before { color: #f88 }`.
 - `content`: строки в кавычках с CSS-экранированием (`"\201C"`), `attr(имя)` — значение атрибута, `icon(имя)` — значок Lucide (как `data-icon`, раздел 7.2; если правило не задало `font-family`, шрифт `lucide`). Части склеиваются подряд: `content: "№ " attr(data-id)`. `none` и `normal` — коробки нет. `counter()`, `counters()`, `url()` — коробки нет и одно замечание в журнале (проверено по коду: `StyleEngine.cs`, строка 757).
 - Не поддерживаются: `::first-line`, `::first-letter`, `::marker`, `::selection`, `::placeholder`, `counter()`, `counters()`, `content: url(…)`.
-- Пример: `own/BBE_UI/UI/pseudo_demo.html` и `pseudo_demo.css`.
+- Пример: `own/BaroUI/UI/pseudo_demo.html` и `pseudo_demo.css`.
 
 ### 4.6. Свойства
 
@@ -747,8 +747,8 @@ Built-in обработчики (проверено по коду: `Render/UiWin
 Скругление и обрезка (по AUTHORING и `docs/ui/PERF.md`, раздел «Скругление по overflow»):
 
 - `overflow: hidden` режет детей **по прямоугольнику, не по скруглению**: дети, заходящие в угол скруглённого блока, видны в квадратном углу.
-- Геометрия обрезки по скруглению есть (`Core/RoundedClip.cs`), но рисование не включено: переключение цели рисования посреди кадра стирает экран (проверено по `ui_host`, `PERF.md`).
-- Картинка в скруглённой карточке заходит в угол. Это то же ограничение.
+- Блок с `overflow: hidden|auto|scroll` по обеим осям и `border-radius` режет всё поддерево по дуге, если ребёнок заходит в угол (проход в начале кадра, `PERF.md`, раздел «Скругление по overflow»; не проверено в игре). Не больше 32 таких блоков на окно за кадр; блок внутри `scale` и текст самого блока режутся прямоугольником.
+- Картинка в скруглённой карточке режется дугой так же, как фон ребёнка (на `ui_host` проверено только с градиентом: картинки там не выводятся).
 
 - **Покрытие краёв (лейн G, 2026-11-16; в игре не проверено).** Края скруглённых блоков, колец, углов и кругов (`UiDraw.Disc`, текстуры углов) считаются аналитически: расстояние от центра пикселя до края даёт покрытие через один линейный переход шириной 1 px (`Core/Coverage.cs`, `Edge`). Прямая сторона на сетке даёт ровно 0 или 1, поэтому дуга и прямая одной ширины. Прежние 4×4 выборки и степенная поправка 0,55–0,7 убраны. Тонкие кольца 1–2 px: частично покрытые пиксели поднимаются степенями 0,8 (1 px) и 0,9 (2 px), `Coverage.ThinLift` (проверено по коду); значения выбраны расчётом, не подгонкой по снимку Chrome. Толще 2 px поправки нет; полностью покрытые и пустые пиксели не меняются. Ограничения: маски с дробным радиусом не делаются (радиус округляется до целого px, `Core/Corners.cs`, `CornerPx`); обрезка по скруглению не включена (раздел 11.1).
 
@@ -1244,7 +1244,7 @@ window.SetDrop("cards", e => { if (e.Phase == UiDropPhase.Cancel) { Reset(e.Sour
 
 ## 6. Графики и рисование: UiDraw, `<curve>`, `<chart>`, `<gauge>`
 
-Геометрия и правила — `Core/` (тесты `DrawKitTests`, `ChartTests`, `tools/ui_test`); рисование — `Render/UiDraw.cs`, `Render/UiCharts.cs` (проверено по коду). Страница-пример: `own/BBE_UI/UI/charts.html` с данными `charts.data.json`; снимок: `tools/ui_host --page own/BBE_UI/UI/charts.html --data own/BBE_UI/UI/charts.data.json --frames 90` (по AUTHORING).
+Геометрия и правила — `Core/` (тесты `DrawKitTests`, `ChartTests`, `tools/ui_test`); рисование — `Render/UiDraw.cs`, `Render/UiCharts.cs` (проверено по коду). Страница-пример: `own/BaroUI/UI/charts.html` с данными `charts.data.json`; снимок: `tools/ui_host --page own/BaroUI/UI/charts.html --data own/BaroUI/UI/charts.data.json --frames 90` (по AUTHORING).
 
 Общее для графиков: `curve`, `chart` и `gauge` — блоки по UA-правилу `curve, chart, gauge { display: block }` (добавлено 2026-11-16, `Core/StyleEngine.cs`, `UserAgentCss`; до этого они были `inline`). Размер задаёт CSS (`height`, `width`). `UI/charts.html` задаёт `display: block` сама, с новым правилом это совпадает (проверено по коду; (не проверено в игре)).
 
@@ -1363,6 +1363,7 @@ Window.SetCanvas("pad", (sb, r) =>
 | Caveat | `caveat`, `cursive`, `handwriting`, `hand` | `Fonts/Caveat-Regular.ttf`, `-Bold.ttf` | 400, 700 | рукописный; курсив синтетический |
 | PT Serif | `pt serif`, `serif`, `ui-serif`, `georgia`, `times new roman`, `times`, `newspaper` | `Fonts/PTSerif-Regular.ttf`, `-Bold.ttf`, `-Italic.ttf` | 400, 700, курсив 400 | настоящий курсив только у обычного веса |
 | Noto Sans | `noto sans`, `sans-serif`, `ui-sans-serif`, `system-ui`, `sans`, `proportional`, `arial`, `helvetica`, `segoe ui` | **из папки игры**: `Content/Fonts/NotoSans/NotoSans-Regular.ttf`, `-Medium`, `-SemiBold`, `-Bold` | 400, 500, 600, 700 | пропорциональный, с кириллицей; только чтение; курсива нет (синтетический) |
+| Noto Sans SC | `noto sans sc`, `noto sans cjk sc`, `notosanscjksc`, `notosanssc`, `sans-serif-sc`, `microsoft yahei`, `pingfang sc`, `simhei`, `chinese` | **из папки игры**: `Content/Fonts/NotoSans/NotoSansCJKsc-Medium.otf`, `-Bold.otf` | 500 (и для 400), 700 | китайский упрощённый: в Noto Sans иероглифов нет, подстановки шрифта по символам нет — китайский текст называет это семейство (проверено по коду: `Core/FontFamilies.cs`; не проверено в игре) |
 | Lucide | `lucide`, `icons`, `icon` | `Fonts/Lucide.ttf` | 400 | значки, раздел 7.2 |
 
 Замечания:
@@ -1425,9 +1426,23 @@ Window.SetCanvas("pad", (sb, r) =>
 
 ---
 
+### 7.7. Свои шрифты: `@font-face`, `BaroUi.RegisterFont`
+
+Проверено по коду: `Core/CssParser.cs` (`ParseFontFace`, `ParseFaceWeight`), `Core/FontFaces.cs` (`FontFile`, `FontScope`), `Core/FontFamilies.cs` (`ResolveIn`, `FindIn`), `Core/StyleEngine.cs` (`LoadFontFace`, `Adopt`), `Render/UiFonts.cs` (`Resolve`, `Release`), `Core/FontCache.cs` (`Forget`), `Api/BaroUi.cs` (`RegisterFont`). Тесты: `tools/ui_test`, `font-faces` (разбор, пути, метрики, порядок семейств, `RegisterFont`, кэш). Метрики `Caveat`, `PT Serif`, `JetBrains Mono`, `Lucide` сверены с таблицей раздела 7.1 (тест). Заголовок `own/BaroUI_Example` с файлом мода снят `tools/ui_host`: без файла (путь вне пакета) строка в замечаниях и запасной шрифт. Не проверено в игре: загрузка `ScalableFont` из папки мода и освобождение нативных граней при закрытии окна.
+
+- Разбор: `@font-face { font-family; src; font-weight; font-style }`. `src` — список `url(...)`; `format(...)` игнорируется; `local()` и не-`url` пропускаются с замечанием. `font-weight`: `normal` 400, `bold` 700, число 1..1000; диапазон `100 900` даёт первое число с замечанием; иное — 400 с замечанием. `font-style`: `normal`, `italic`, `oblique`. Неизвестный дескриптор — замечание, блок остаётся. Блок без семейства, без `src` или с именем не из одного слова — пропускается (проверено по коду; тест).
+- Путь: от папки страницы, через `ImageCss.ResolvePath` (как картинки): внутри пакета рядом с `filelist.xml`; `http:`, `//`, `data:`, `file:` и абсолютные пути отклоняются (тест `font-face path`). Берётся первый из `src`, который читается.
+- Метрики: `FontFile.TryReadMetrics` читает `head`, `hhea` (иначе `OS/2` win) для TrueType и OpenType с CFF. Коллекции TTC, WOFF и WOFF2 отклоняются с причиной. Высота строки своего шрифта — по его метрикам (`FontFace.Ascent`, `Descent`).
+- Область видимости: у каждого окна свой `FontScope` (`StyleEngine.FontFaces`). `FontFamilies.FindIn(scope, value)`: имена списка идут по порядку, сначала семейства окна, потом таблица; первое известное решает. Окно со своими семействами не делит стиль с другими окнами (`StyleEngine.Adopt`), поэтому его стили не пережили окно.
+- Нет файла или не читается: семейство не попадает в область видимости; список идёт к следующему имени, потом к `Default` (тест `font resolution`). Замечание одно на правило (`@font-face X: ...`).
+- Начертания: ближайший вес и синтетический курсив — как у встроенных семейств (`FontFamilies.Pick`; тест).
+- `BaroUi.RegisterFont(family, file, weight = 400, italic = false)`: действует на окна, открытые после вызова (снимок реестра при открытии). Бросает `ArgumentException` для семейства не из одного имени (с запятой) и для пути не абсолютного. Отсутствующий файл — замечание `RegisterFont: ...` в окне (тест `RegisterFont`).
+- Память: шрифт кэшируется по грани и размеру в `UiFonts` (`FontCache`, как встроенные). `UiWindow.Close` и горячая перезагрузка (`TakeOver`) вызывают `UiFonts.Release`: шрифты перестают быть закреплёнными и уходят по правилам кэша (простой более 120 кадров или предел `MaxLive`). Последний шрифт файла остаётся якорем (правило 5 `FontCache`), то есть один `ScalableFont` на файл мода держится до появления другого шрифта того же файла (не проверено в игре: нативная грань).
+- Ограничения: нет лимита размера файла и числа граней; покрытие кириллицы файла мода не проверяется (встроенные проверены при сборке таблицы); файл, исчезнувший уже во время работы окна, даёт запасной `Default` с одной строкой журнала (не следующее имя списка); `RegisterFont` не проверяет, что путь лежит в пакете вызывающего мода.
+
 ## 8. C#-API: публичные типы и члены
 
-Пространства имён: `BaroUI.Api` (`BaroUi`, `BaroUiView`), `BaroUI.Core` (разбор, стили, ввод, геометрия), `BaroUI.Render` (`UiWindow`, рисование, контролы). Все перечисленные члены проверены по коду (`own/BBE_UI/CSharp/Client`), если не указано иное.
+Пространства имён: `BaroUI.Api` (`BaroUi`, `BaroUiView`), `BaroUI.Core` (разбор, стили, ввод, геометрия), `BaroUI.Render` (`UiWindow`, рисование, контролы). Все перечисленные члены проверены по коду (`own/BaroUI/CSharp/Client`), если не указано иное.
 
 Стабильный публичный API (по одной строке на член), версия движка и правила ломающих изменений: [`API.md`](API.md). Проверка версии в моде: `BaroUi.Requires("0.2.0", имя)`.
 
@@ -1632,7 +1647,7 @@ Window.SetCanvas("pad", (sb, r) =>
 | `baroui problems [page]` | все замечания окон в журнал: `файл:строка: текст` |
 | `baroui anim [on\|off]` | анимации окон вкл/выкл |
 | `baroui anim fps N\|max` | частота выборки анимируемых длин по умолчанию (30); `max` — каждый кадр; `layout-fps` блока главнее |
-| `baroui src <папка>\|off` | брать страницы из папки (например `own/BBE_UI/UI`), а не из установленного пакета |
+| `baroui src <папка>\|off` | брать страницы из папки (например `own/BaroUI/UI`), а не из установленного пакета |
 
 Строка подсказки: `Usage: baroui open <page> | close [page] | reload [page] | list | watch [on|off] | debug [on|off] | anim [on|off|fps N|max] | problems [page] | src [dir|off]`.
 
@@ -1647,12 +1662,12 @@ Window.SetCanvas("pad", (sb, r) =>
 
 ### 9.3. `tools/ui_host` и эталонные снимки
 
-- `tools/ui_host` — консольный хост (`ui_host.csproj`, `Program.cs`, `ModsScenario.cs`, `Script.cs`; `--data` читает `own/BBE_UI/CSharp/Client/Core/JsonModel.cs`, тот же код, что `OpenPage`). Рисует страницы настоящим `UiWindow` и `Painter` в PNG; шрифт Noto Sans берётся из папки игры (только чтение) (по AUTHORING; проверено по составу папки).
+- `tools/ui_host` — консольный хост (`ui_host.csproj`, `Program.cs`, `ModsScenario.cs`, `Script.cs`; `--data` читает `own/BaroUI/CSharp/Client/Core/JsonModel.cs`, тот же код, что `OpenPage`). Рисует страницы настоящим `UiWindow` и `Painter` в PNG; шрифт Noto Sans берётся из папки игры (только чтение) (по AUTHORING; проверено по составу папки).
 - Сборка: `cd tools/ui_host && dotnet build -c Release && cd ../..` (по AUTHORING).
 - Ключи: `--page <файл>`, `--data <json>`, `--frames N` (по AUTHORING и `snap.py`).
 - Ограничение: `ui_host` не доставляет клавиши фокусу (AUTHORING, раздел «Графики»).
 - `tools/ui_host/snap.py` — сравнение снимков:
-  - `PAGES` — список страниц: `controls`, `inputs`, `anim_demo` (из `own/BBE_UI/UI`), `dialog` (`own/BBE_Dialog/UI/dialog.html`) и `toast` (`own/BBE_Toast/UI/toast.html`; это другие пакеты, не `BBE_UI`).
+  - `PAGES` — список страниц: `controls`, `inputs`, `anim_demo` (из `own/BaroUI/UI`), `dialog` (`own/BBE_Dialog/UI/dialog.html`) и `toast` (`own/BBE_Toast/UI/toast.html`; это другие пакеты, не `BaroUI`).
   - `SIZE = 960x540`, `FRAMES = 90` (1,5 с игрового времени).
   - Ключи: `--only <имя>`, `--update` (записать эталоны), `--selftest` (проверка самого сравнения), `--tol 8` (порог по каналу, 0–255), `--share 0.001` (доля отличных пикселей).
   - Результат: код 1 при несовпадении; `out/diff/<страница>.png` (красным отличные пиксели).
@@ -1837,7 +1852,7 @@ Debug, 300 карточек, 22 932 элемента, медиана:
 
 **Правила и селекторы**
 
-- `@media`, `@import`, `@font-face`, `@supports`, `@layer`, `@container`, `@namespace`. Есть `@keyframes`.
+- `@media`, `@import`, `@supports`, `@layer`, `@container`, `@namespace`. Есть `@keyframes` и `@font-face` (раздел 7.7).
 - Операторы атрибутов: `[a^=…]`, `[a$=…]`, `[a*=…]`, `[a~=…]`, `[a|=…]`.
 - Псевдоэлементы, кроме `::before`/`::after`: `::marker`, `::selection`, `::placeholder`, `::first-line`, `::first-letter`.
 - Псевдоклассы: `:link`, `:visited`, `:empty`, `:is()`, `:where()`, `:first-of-type`, `:nth-of-type`, `:lang()`, `:target`, `:scope`, `:required`, `:invalid`, `:placeholder-shown`, `:nth-child(2n+1)` (`an+b` не разбирается, совпадения нет).
@@ -1866,7 +1881,6 @@ Debug, 300 карточек, 22 932 элемента, медиана:
 
 **Рисование и картинки**
 
-- Скругление детей по `overflow` (обрезка по дуге) — нет (геометрия есть, рисование не включено).
 - Скругление картинки фоном и картинки `<img>` — углы прямые.
 - Обводка `dashed`/`dotted` у `outline` — сплошная линия.
 - Градиент и тень на углах с разными радиусами — тень и контур берут один радиус.
@@ -1892,7 +1906,7 @@ Debug, 300 карточек, 22 932 элемента, медиана:
 **Прочее**
 
 - JavaScript, `eval`, сеть, `http(s)://`, `data:`, `file:` и абсолютные пути в адресах картинок и шрифтов.
-- Шрифты пакета: `@font-face` нет; только семейства из раздела 7.1.
+- Шрифты пакета: `@font-face` и `BaroUi.RegisterFont` есть (раздел 7.7); без них только семейства из раздела 7.1.
 - Языки направления RTL, вертикальное письмо — нет.
 - Печать, доступность (чтение с экрана) — нет.
 - Сглаживание: края дуг, косых линий и углов выглядят резко (раздел 11.2).
@@ -1903,7 +1917,6 @@ Debug, 300 карточек, 22 932 элемента, медиана:
 
 | № | Что | Статус |
 |---|---|---|
-| 1 | Обрезка детей по скруглению (`overflow` и `border-radius`): геометрия есть (`Core/RoundedClip.cs`), рисование не включено — переключение цели рисования посреди кадра стирает экран (проверено на `ui_host`) | не сделано; нужен проход в начале кадра и `PreserveContents` (не проверено) |
 | 2 | Сглаживание: скругления и края не по сетке пикселей выглядят пикселизированными и резкими (владелец, 2026-11-16) | лейн G сделан 2026-11-16, в игре не проверено: края скруглений, колец и углов — аналитическое покрытие одним линейным переходом в 1 px (`Core/Coverage.cs`, `Core/Corners.cs`, `Core/RoundedClip.cs`, `Render/Painter.cs`, `Render/UiDraw.cs`). Старые 4×4 выборки и степенная поправка 0,55–0,7 убраны. Тонкие кольца 1–2 px подняты степенями 0,8 и 0,9 (`Coverage.ThinLift`): значения выбраны расчётом (светлая линия в sRGB при половинном покрытии даёт меньше света, чем в линейном), не подгонкой по снимку Chrome. Осталось: маски с дробным радиусом не делаются, радиус округляется до целых px (`Corners.CornerPx`); картинки страниц рисуются с `PointClamp` (`UiImages.cs`, около строки 180); вид сравнить с Chrome и в игре |
 | 3 | Тень и градиент при зуме: запекание ограничено по кадрам; при быстром зуме тень может прыгать или пропадать на кадр | сделано (аудит C, пункты 1–2), в игре не измерено |
 | 4 | Тень блока и градиент со скруглением: один радиус для тени и контура | записано (аудит C, пункт 3 — у разных углов градиент по углам; тень и контур — нет) |
@@ -1937,7 +1950,7 @@ Debug, 300 карточек, 22 932 элемента, медиана:
 - **Замеры в игре.** Время запекания теней и градиентов; стоимость `:has()`; аллокации отрисовки; стоимость графиков в кадре.
 - **Карта.** Все сценарии менеджера модов на игре (`HANDOFF`, этап B6 ждёт игры).
 - **LuaCs.** Работа окон на обычном (stock) LuaCs — не проверялась (`HANDOFF`, раздел 0, строка про обычный LuaCs).
-- **Пакет как есть.** Сборка и запуск `own/BBE_UI` на LuaCs 1.15.4 (новый плагин) — не проверено (`docs/luacs/COMPARE_PLUGIN.md`).
+- **Пакет как есть.** Сборка и запуск `own/BaroUI` на LuaCs 1.15.4 (новый плагин) — не проверено (`docs/luacs/COMPARE_PLUGIN.md`).
 
 ---
 
@@ -1947,7 +1960,7 @@ Debug, 300 карточек, 22 932 элемента, медиана:
 
 - Версия в `filelist.xml` пакета — `gameversion="1.13.5.0"` (до 2026-11-16 — 1.13.4.0).
 - Патч форка LuaCs (`forks/LuaCs`, запуск модов в меню) собирался на игре **1.13.5.0** (`docs/HANDOFF.md`, раздел 4.1 и 0). Версия в метаданных пакета (1.13.4.0) и версия, на которой собран форк (1.13.5.0), не совпадают. Что из этого важно для игры — не проверено (владелец решает, какую версию писать).
-- **Решено владельцем 2026-11-16:** `gameversion` пакета поднят до 1.13.5.0, как у форка. Прежняя запись: **Открытое решение владельца** (пункт 19 сверки, 2026-11-16): не менять `gameversion` в `own/BBE_UI/filelist.xml` (1.13.4.0), пока владелец не решит, на какой версии игры пакет и форк. Ни код, ни `filelist.xml` при сверке не трогались.
+- **Решено владельцем 2026-11-16:** `gameversion` пакета поднят до 1.13.5.0, как у форка. Прежняя запись: **Открытое решение владельца** (пункт 19 сверки, 2026-11-16): не менять `gameversion` в `own/BaroUI/filelist.xml` (1.13.4.0), пока владелец не решит, на какой версии игры пакет и форк. Ни код, ни `filelist.xml` при сверке не трогались.
 - Плагин LuaCs в новой версии (`LuaCsForBarotraumaPlugin`) нацелен на игру 1.15.4.0 (`docs/luacs/COMPARE_PLUGIN.md`, раздел 0).
 
 ### 12.2. LuaCs: форк BBE и обычный
@@ -1959,11 +1972,11 @@ Debug, 300 карточек, 22 932 элемента, медиана:
 | правки игры | форк правит файлы игры: `py -X utf8 tools/engine.py save-patch` перед `build client\|server` (сборка стирает правки), затем `install-client` (`HANDOFF`, раздел 3) | не требуются |
 | ветки | `luacs/bbe`, `moonsharp/bbe` в `Nice2Live/Barotrauma-Beyond-the-Europa` (`HANDOFF`, раздел 0) | — |
 
-Пакет `own/BBE_UI` ставит Harmony-префиксы только в `Api/BaroUi.cs` (`harmony.Patch`, строки 45–52): на `DebugConsole.AddToGUIUpdateList` и на пауза-меню (раздел 1.3). Других патчей в `CSharp/` не найдено (проверено поиском `harmony`). Совпадение этих целей с версией, на которой работает LuaCs, — (не проверено по коду для каждой версии).
+Пакет `own/BaroUI` ставит Harmony-префиксы только в `Api/BaroUi.cs` (`harmony.Patch`, строки 45–52): на `DebugConsole.AddToGUIUpdateList` и на пауза-меню (раздел 1.3). Других патчей в `CSharp/` не найдено (проверено поиском `harmony`). Совпадение этих целей с версией, на которой работает LuaCs, — (не проверено по коду для каждой версии).
 
 ### 12.3. Новый плагин LuaCs
 
-Новый плагин LuaCs (`Luatrauma/LuaCsForBarotraumaPlugin`) не является форком игры: он подключается через загрузчик плагинов и Harmony, целит в игру 1.15.4.0, и потому наш форк на 1.13.5 не переносится напрямую; `own/BBE_UI` по формату `ModConfig.xml` и Harmony-целям, вероятно, загрузится, но на 1.15.4 не проверен (`docs/luacs/COMPARE_PLUGIN.md`, раздел 0, пункты 1–6).
+Новый плагин LuaCs (`Luatrauma/LuaCsForBarotraumaPlugin`) не является форком игры: он подключается через загрузчик плагинов и Harmony, целит в игру 1.15.4.0, и потому наш форк на 1.13.5 не переносится напрямую; `own/BaroUI` по формату `ModConfig.xml` и Harmony-целям, вероятно, загрузится, но на 1.15.4 не проверен (`docs/luacs/COMPARE_PLUGIN.md`, раздел 0, пункты 1–6).
 
 ### 12.4. Версии и имена
 

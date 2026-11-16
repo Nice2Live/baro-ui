@@ -117,13 +117,13 @@ namespace BaroUI.Render
         private LayoutBox hitBox;
         private Rectangle hitRect;
 
-        internal UiWindow(string name, Document doc, IEnumerable<StyleSheet> sheets, UiFonts fonts)
+        internal UiWindow(string name, Document doc, IEnumerable<StyleSheet> sheets, UiFonts fonts, string pageDir = null)
         {
             Name = name;
             Document = doc;
             screenViewport = doc.ScreenViewport;
             this.fonts = fonts;
-            styles = new StyleEngine(sheets.Prepend(CssParser.Parse(PopupPlace.Css, "popup")).ToArray());   // data-popup blocks are hidden until opened
+            styles = new StyleEngine(pageDir, sheets.Prepend(CssParser.Parse(PopupPlace.Css, "popup")).ToArray());   // data-popup blocks are hidden until opened
             Images = new UiImages(name, budget);
             Drawing = new UiDraw(budget);
             painter = new Painter(fonts, Images, budget) { Scroll = scroll, BoxOf = BoxOf };
@@ -193,7 +193,7 @@ namespace BaroUI.Render
                 sheets.Add(CssParser.Parse(File.ReadAllText(path), Path.GetFileName(path)));
                 files.Add(path);
             }
-            var w = new UiWindow(name ?? Path.GetFileNameWithoutExtension(htmlPath), doc, sheets, fonts) { SourcePath = Path.GetFullPath(htmlPath) };
+            var w = new UiWindow(name ?? Path.GetFileNameWithoutExtension(htmlPath), doc, sheets, fonts, dir) { SourcePath = Path.GetFullPath(htmlPath) };
             files.Insert(0, w.SourcePath);
             foreach (var f in files) { w.sources.Add((f, File.GetLastWriteTimeUtc(f))); }
             return w;
@@ -253,6 +253,7 @@ namespace BaroUI.Render
             try { old.Images.Dispose(); } catch (Exception e) { UiPlugin.Log($"{Name}: releasing the pictures failed: {e}"); }
             try { old.Drawing.Dispose(); } catch (Exception e) { UiPlugin.Log($"{Name}: releasing the drawing kit failed: {e}"); }
             old.painter.Dispose();
+            try { old.fonts.Release(old.styles.FontFaces); } catch (Exception e) { UiPlugin.Log($"{Name}: releasing the fonts failed: {e}"); }
             old.View?.Attach(this);
         }
 
@@ -595,6 +596,7 @@ namespace BaroUI.Render
             try { Images.Dispose(); } catch (Exception e) { UiPlugin.Log($"{Name}: releasing the pictures failed: {e}"); }
             try { Videos.Dispose(); } catch (Exception e) { UiPlugin.Log($"{Name}: releasing the videos failed: {e}"); }
             try { Drawing.Dispose(); } catch (Exception e) { UiPlugin.Log($"{Name}: releasing the drawing kit failed: {e}"); }
+            try { fonts.Release(styles.FontFaces); } catch (Exception e) { UiPlugin.Log($"{Name}: releasing the fonts failed: {e}"); }
             try { View?.Closed(); } catch (Exception e) { UiPlugin.Log($"{Name}: OnClose failed: {e}"); }
             BaroUi.Forget(this);
         }
@@ -854,13 +856,23 @@ namespace BaroUI.Render
             if (popup != null && IsOpen) { Controls.AfterClick(e, popup, serial); }
         }
 
+        /// <summary>The start of the frame, before anything of it is drawn (BaroUi.PrePass; the game's Draw prefix, tools/ui_host): renders the children of the
+        /// rounded overflow blocks into their targets (Render/RoundedPass.cs). The window is laid out already (its update did it). Controls.BeginPaint runs
+        /// here too, so the controls the pass paints are enabled for this frame.</summary>
+        internal void PrePass(SpriteBatch sb)
+        {
+            if (!IsOpen) { return; }
+            Controls.BeginPaint();
+            painter.PrePass(sb, Root);
+        }
+
         private void Draw(SpriteBatch sb)
         {
             long d0 = Stopwatch.GetTimestamp();
             EnsureLayout();
             bool timed = SelfTest.Timing(this);
             long alloc = timed ? GC.GetAllocatedBytesForCurrentThread() : 0, t0 = timed ? Stopwatch.GetTimestamp() : 0;
-            Controls.BeginPaint();
+            if (!painter.PrePassReady) { Controls.BeginPaint(); }
             painter.Paint(sb, Root);
             if (timed)
             {

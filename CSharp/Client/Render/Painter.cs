@@ -14,7 +14,7 @@ namespace BaroUI.Render
     /// a scroll thumb. The same walk, in reverse, answers hit tests. Styles are read from the DOM at draw time, so a
     /// paint-only change (:hover colour) needs no new layout. Stage 5: controls (input, select, progress, item,
     /// canvas) get their content from UiControls; modal dialogs are skipped here and painted on top by it.</summary>
-    internal sealed class Painter : IImageSizes
+    internal sealed partial class Painter : IImageSizes
     {
         private readonly UiFonts fonts;
         /// <summary>The window's one texture budget (Core TextureLedger): every texture of the window is in it, the painter's caches and the pictures alike.</summary>
@@ -62,7 +62,9 @@ namespace BaroUI.Render
         private float StickyDy(Element e, LayoutBox b, float dy)
         {
             if (!b.Sticky || BoxOf == null) { return dy; }
-            return dy + ScreenMap.StickyOffset(e, b, dy, BoxOf, ScrollOfElement, Deferred.Contains);
+            // inside a rounded target dy is relative to the target's origin; the sticky step reads the screen (the layout's boxes and scroll), so it gets the
+            // screen's dy. The offset it returns is a displacement, the same in both
+            return dy + ScreenMap.StickyOffset(e, b, passing ? dy + passY : dy, BoxOf, ScrollOfElement, Deferred.Contains);
         }
 
         private float ScrollOfElement(Element e) => Scroll != null && Scroll.TryGetValue(e, out float v) ? v : 0;
@@ -74,6 +76,8 @@ namespace BaroUI.Render
             masks = new TextureCache<(int, int, int)>(budget);
             tiles = new TextureCache<(int, int, int, int, int)>(budget);
             decor = new UiDecorTextures(budget);
+            roundedTargets = new TextureCache<Element>(budget);
+            roundedTiles = new TextureCache<(int Rx, int Ry, int Corner)>(budget);
         }
 
         /// <summary>The folder of the page being painted, where a picture path of a stylesheet or of &lt;img src&gt; starts. The window may set it; else it is
@@ -155,6 +159,7 @@ namespace BaroUI.Render
                 BatchMatrix = null;
                 if (clipped) { SetScissor(prev); }
                 sb = null;
+                prePassReady = false;       // the targets of a pre-pass are used by one paint only
             }
         }
 
@@ -344,10 +349,16 @@ namespace BaroUI.Render
                 SetScissor(next);
                 if (b.Element != null && Scroll != null && Scroll.TryGetValue(b.Element, out float sy)) { cdy = ScreenMap.ScrollStep(cdy, sy); }
             }
-            foreach (var c in Order(b))
+            // a block with a rounded overflow clip: its children are in the target the pre-pass made (RoundedPass.cs); the scroll bar is drawn over it below
+            bool inTarget = b.Element != null && b.ClipX && b.ClipY && TryDrawRounded(b, Snap(b.X + dx + b.Border.Left, b.Y + dy + b.Border.Top,
+                b.W - b.Border.Horizontal, b.H - b.Border.Vertical));
+            if (!inTarget)
             {
-                if (Deferred.Count > 0 && c.Element != null && Deferred.Contains(c.Element)) { continue; }
-                PaintBox(c, cdx, cdy, opacity);
+                foreach (var c in Order(b))
+                {
+                    if (Deferred.Count > 0 && c.Element != null && Deferred.Contains(c.Element)) { continue; }
+                    PaintBox(c, cdx, cdy, opacity);
+                }
             }
             if (b.ClipY && visible) { PaintScrollbar(b, s, dx, dy, opacity); }
             if (clip != saved) { SetScissor(saved); }
@@ -1321,6 +1332,7 @@ namespace BaroUI.Render
             maskFailed.Clear();
             tileFailed.Clear();
             decor.Dispose();
+            DisposeRounded();
         }
     }
 

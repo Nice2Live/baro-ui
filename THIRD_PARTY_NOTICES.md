@@ -9,7 +9,9 @@ The MIT license of BaroUI covers its code and documentation. The fonts in `Fonts
 | `Caveat-Regular.ttf`, `Caveat-Bold.ttf` | [Caveat](https://github.com/googlefonts/caveat) | SIL Open Font License 1.1 | `Fonts/OFL-Caveat.txt` |
 | `Lucide.ttf`, `lucide-codepoints.json` | [Lucide](https://lucide.dev) (lucide-static 1.73.0) | ISC | `Fonts/LICENSE-Lucide.txt` |
 
-Noto Sans is not shipped: the engine reads it from the game's own folder.
+`examples/BaroUI_Example/Fonts/` ships its own copy of Caveat (OFL, `OFL-Caveat.txt` next to it) to show how a mod brings its own font.
+
+Noto Sans and Noto Sans SC are not shipped: the engine reads them from the game's own folder.
 
 `UI/media/1_portal_loop.webm` is a short clip made for the *Barotrauma: Beyond the Europa* modpack; it ships only as a demo of `<video>`.
 

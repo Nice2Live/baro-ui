@@ -64,6 +64,22 @@ namespace BaroUI.Core
             return false;
         }
 
+        /// <summary>Most rounded boxes a window renders in one pre-pass (Render/RoundedPass.cs). The rest keep the rectangular clip for that frame, and a
+        /// diagnostic says how many.</summary>
+        public const int MaxPerFrame = 32;
+
+        /// <summary>The alpha of one texel of a corner tile: the inside coverage (Coverage.Quadrant) at the texel's centre. corner: 0 TL, 1 TR, 2 BR, 3 BL;
+        /// the tile is rx x ry (the corner's radii, from the box's outer corner), x and y are the texel in it. It is the complement of <see cref="Alpha"/>
+        /// (255 - Alpha) in the corner square, so the tile and the mask agree.</summary>
+        public static byte TileAlpha(int corner, int rx, int ry, int x, int y)
+        {
+            float px = x + 0.5f, py = y + 0.5f;
+            // the arc's centre is the tile's inner corner: TL (rx, ry), TR (0, ry), BR (0, 0), BL (rx, 0)
+            float dx = corner == 0 || corner == 3 ? rx - px : px;
+            float dy = corner == 0 || corner == 1 ? ry - py : py;
+            return Coverage.ToByte(Coverage.Quadrant(dx, dy, rx, ry));
+        }
+
         public static MaskKey Key(int w, int h, in CornerPx c) =>
             new(w, h, Pack(c.TLx, c.TLy), Pack(c.TRx, c.TRy), Pack(c.BRx, c.BRy), Pack(c.BLx, c.BLy));
 

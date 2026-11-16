@@ -132,7 +132,7 @@ namespace BaroUI.Core
         /// <summary>A private copy for one animating element: the same declared values, empty caches, no font slot.</summary>
         internal ComputedStyle CloneBare()
         {
-            var c = new ComputedStyle(unitPx) { FontSizePx = FontSizePx };
+            var c = new ComputedStyle(unitPx) { FontSizePx = FontSizePx, Fonts = Fonts };
             foreach (var kv in Values) { c.Values[kv.Key] = kv.Value; }
             foreach (var kv in Vars) { c.Vars[kv.Key] = kv.Value; }
             return c;
@@ -147,6 +147,8 @@ namespace BaroUI.Core
         internal object LineHeightOf;
         /// <summary>The renderer's font for this style (UiFonts): lives and dies with the style, no global table.</summary>
         internal object FontSlot;
+        /// <summary>The window's own font families (@font-face, RegisterFont) this style is resolved with; null: the table only (Core/FontFaces.cs).</summary>
+        internal FontScope Fonts;
 
         public override string ToString()
         {
@@ -534,6 +536,8 @@ dialog[open] { display: block; }
         private void Adopt()
         {
             if (fingerprint != null) { return; }
+            // a window with its own families keeps a private store: its styles carry its FontScope, whose faces die with the window
+            if (fontScope.Faces.Count > 0) { store = new StyleStore(); fingerprint = "own fonts"; return; }
             fingerprint = Fingerprint();
             if (!SharedStores.TryGetValue(fingerprint, out var shared))
             {
@@ -588,16 +592,34 @@ dialog[open] { display: block; }
         /// <summary>Selectors below this order come from the UA sheet: every author rule beats them.</summary>
         private readonly int uaCount;
 
-        public StyleEngine(params StyleSheet[] sheets)
+        public StyleEngine(params StyleSheet[] sheets) : this(null, sheets) { }
+
+        /// <summary>pageDir: the folder of the page, the base of the @font-face urls (as the pictures' are, ImageCss.ResolvePath); null when the page has none.</summary>
+        public StyleEngine(string pageDir, params StyleSheet[] sheets)
         {
+            this.pageDir = pageDir;
             Add(CssParser.Parse(UserAgentCss, "ua"));
             uaCount = selectors.Count;
+            // the families registered before this window opened (BaroUi.RegisterFont), then the sheets' own @font-face
+            foreach (var r in FontScope.RegisteredFonts())
+            {
+                string bad = fontScope.Add(r.Family, r.File, r.Weight, r.Italic);
+                if (bad != null) { Diagnostics.Add(new Diagnostic("RegisterFont", 0, $"{r.Family}: {bad}; the family is not defined here")); }
+            }
             foreach (var s in sheets) { Add(s); }
         }
+
+        /// <summary>The folder of the page (the base of the @font-face urls), null when there is none.</summary>
+        private readonly string pageDir;
+        /// <summary>The window's own font families (Core/FontFaces.cs): @font-face of the sheets and the registered faces that are readable.</summary>
+        private readonly FontScope fontScope = new();
+        /// <summary>The faces this engine owns: UiFonts releases them when the window closes or is reloaded.</summary>
+        internal IReadOnlyList<FontFace> FontFaces => fontScope.Faces;
 
         public void Add(StyleSheet sheet)
         {
             Diagnostics.AddRange(sheet.Diagnostics);
+            foreach (var f in sheet.FontFaces) { LoadFontFace(f, sheet.File); }
             foreach (var k in sheet.Keyframes) { AddKeyframes(k, sheet.File); }
             foreach (var rule in sheet.Rules)
             {
@@ -617,6 +639,23 @@ dialog[open] { display: block; }
                 }
             }
             Renew();
+        }
+
+        /// <summary>Reads one @font-face rule: the first of its srcs that is inside the package and readable is the face. A src that was not used is
+        /// one diagnostic for the rule, and when none is usable the family is not defined here (the font-family list goes on to the next name).</summary>
+        private void LoadFontFace(FontFaceRule rule, string file)
+        {
+            var problems = new List<string>();
+            bool loaded = false;
+            foreach (var src in rule.Sources)
+            {
+                if (!ImageCss.ResolvePath(pageDir, src, System.IO.File.Exists, out string full, out string why)) { problems.Add(why); continue; }
+                string bad = fontScope.Add(rule.Family, full, rule.Weight, rule.Italic);
+                if (bad == null) { loaded = true; break; }
+                problems.Add($"'{src}': {bad}");
+            }
+            if (!loaded) { Diagnostics.Add(new Diagnostic(file, rule.Line, $"@font-face {rule.Family}: no readable file ({string.Join("; ", problems)}), the family is not defined")); }
+            else if (problems.Count > 0) { Diagnostics.Add(new Diagnostic(file, rule.Line, $"@font-face {rule.Family}: {string.Join("; ", problems)}, the next src is used")); }
         }
 
         /// <summary>Styles the whole document, &lt;style&gt; blocks included.</summary>
@@ -936,7 +975,7 @@ dialog[open] { display: block; }
                 return s != 0 ? s : a.Order.CompareTo(b.Order);
             });
 
-            var style = new ComputedStyle(UnitPx);
+            var style = new ComputedStyle(UnitPx) { Fonts = fontScope };
             if (parent != null)
             {
                 foreach (var kv in parent.Vars) { style.Vars[kv.Key] = kv.Value; }

@@ -13,6 +13,11 @@ namespace BaroUI.Core
         public bool Italic { get; }
         public string File { get; }
         public bool Game { get; }
+        /// <summary>A file a page or a mod brought (@font-face, BaroUi.RegisterFont): File is the full path, and the window owns the face (FontScope).</summary>
+        public bool Local { get; internal set; }
+        /// <summary>Ascent and descent in em read from the file's own tables (FontFile); null for the built-in faces, which take their family's.</summary>
+        public double? Ascent { get; internal set; }
+        public double? Descent { get; internal set; }
         public FontFace(int weight, bool italic, string file, bool game = false) { Weight = weight; Italic = italic; File = file; Game = game; }
         public override string ToString() => $"{Family?.Name} {Weight}{(Italic ? " italic" : "")} ({File})";
     }
@@ -63,13 +68,21 @@ namespace BaroUI.Core
             new FontFace(600, false, "Content/Fonts/NotoSans/NotoSans-SemiBold.ttf", game: true),
             new FontFace(700, false, "Content/Fonts/NotoSans/NotoSans-Bold.ttf", game: true));
 
+        /// <summary>Noto Sans CJK SC from the installed game (Content/Fonts/NotoSans, OFL; the face the game itself uses for Simplified Chinese): Noto Sans has
+        /// no Chinese glyphs and the engine has no per-glyph fallback, so a Chinese page names this family. Only Medium and Bold files ship: 400 and 500 take
+        /// Medium. Ascent 1.16, descent 0.32 from its hhea table (unitsPerEm 1000).</summary>
+        public static readonly FontFamily SansSC = new("Noto Sans SC", 1.16, 0.32,
+            new[] { "noto sans sc", "noto sans cjk sc", "notosanscjksc", "notosanssc", "sans-serif-sc", "microsoft yahei", "pingfang sc", "simhei", "chinese" },
+            new FontFace(500, false, "Content/Fonts/NotoSans/NotoSansCJKsc-Medium.otf", game: true),
+            new FontFace(700, false, "Content/Fonts/NotoSans/NotoSansCJKsc-Bold.otf", game: true));
+
         /// <summary>Lucide (Fonts/Lucide.ttf, ISC): the icon font of [data-icon] (Core/Icons.cs). One face; ascent 1, descent 0 from its hhea table
         /// (unitsPerEm 1000, ascender 1000, descender 0): an icon stands on the baseline and is 1em high.</summary>
         public static readonly FontFamily Icons = new("Lucide", 1.0, 0.0,
             new[] { "lucide", "icons", "icon" },
             new FontFace(400, false, "Fonts/Lucide.ttf"));
 
-        public static readonly IReadOnlyList<FontFamily> All = new[] { Mono, Hand, Serif, Sans, Icons };
+        public static readonly IReadOnlyList<FontFamily> All = new[] { Mono, Hand, Serif, Sans, SansSC, Icons };
 
         /// <summary>What no name of a font-family list matches (and the stand-in for a game font that is not there).</summary>
         public static FontFamily Default => Mono;
@@ -197,11 +210,27 @@ namespace BaroUI.Core
         }
 
         /// <summary>The whole CSS side: font-family list, font-weight and font-style values to a face. parentWeight only matters for bolder and lighter.</summary>
-        public static FontFace Resolve(string fontFamily, string fontWeight, string fontStyle, out bool slant, int parentWeight = 400)
+        public static FontFace Resolve(string fontFamily, string fontWeight, string fontStyle, out bool slant, int parentWeight = 400) =>
+            ResolveIn(null, fontFamily, fontWeight, fontStyle, out slant, parentWeight);
+
+        /// <summary>As Resolve, with the window's own families (FontScope) first: each name of the font-family list is looked up in the scope, then in
+        /// the table, and the first one known wins. A scope family shadows a table family of the same name in that window only.</summary>
+        public static FontFace ResolveIn(FontScope scope, string fontFamily, string fontWeight, string fontStyle, out bool slant, int parentWeight = 400)
         {
             string st = (fontStyle ?? "").Trim();
             bool italic = st.Equals("italic", StringComparison.OrdinalIgnoreCase) || st.StartsWith("oblique", StringComparison.OrdinalIgnoreCase);
-            return Pick(Find(fontFamily), ParseWeight(fontWeight, parentWeight), italic, out slant);
+            return Pick(FindIn(scope, fontFamily), ParseWeight(fontWeight, parentWeight), italic, out slant);
+        }
+
+        /// <summary>The family of a font-family value in a window: the scope's families, then the table; none known is Default.</summary>
+        public static FontFamily FindIn(FontScope scope, string value)
+        {
+            foreach (var n in SplitList(value))
+            {
+                if (scope != null && scope.ByName.TryGetValue(n, out var local)) { return local; }
+                if (ByName.TryGetValue(n, out var family)) { return family; }
+            }
+            return Default;
         }
 
         /// <summary>The face of the Default family that stands in for a face whose file is missing: its match for the same weight and style.</summary>
@@ -211,6 +240,7 @@ namespace BaroUI.Core
         public static string FullPath(FontFace face, string packageDir, string gameDir = null)
         {
             if (face.Game) { return gameDir == null ? face.File : System.IO.Path.Combine(gameDir, face.File); }
+            if (face.Local) { return face.File; }
             return System.IO.Path.Combine(packageDir ?? "", face.File);
         }
     }

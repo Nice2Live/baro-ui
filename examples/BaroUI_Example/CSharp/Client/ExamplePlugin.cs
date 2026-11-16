@@ -14,7 +14,7 @@ namespace BaroUiExample
     {
         public const string Command = "baroui_example";
         public const string ModName = "Baro-UI Example";
-        public const string EngineMin = "0.2.0";
+        public const string EngineMin = "0.3.0";
 
         public void PreInitPatching() { }
 

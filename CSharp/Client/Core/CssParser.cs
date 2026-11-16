@@ -290,10 +290,22 @@ namespace BaroUI.Core
         public readonly List<KeyStop> Stops = new();
     }
 
+    /// <summary>One @font-face block: the family name, the src urls in the order written (the first readable one is used), the weight and the italic style.</summary>
+    internal sealed class FontFaceRule
+    {
+        public string Family;
+        public readonly List<string> Sources = new();
+        public int Weight = 400;
+        public bool Italic;
+        public int Line;
+    }
+
     public sealed class StyleSheet
     {
         public readonly List<Rule> Rules = new();
         public readonly List<KeyframesRule> Keyframes = new();
+        /// <summary>The @font-face blocks, as written (the files are read by StyleEngine, which knows the page folder).</summary>
+        internal readonly List<FontFaceRule> FontFaces = new();
         public readonly List<Diagnostic> Diagnostics = new();
         public string File;
     }
@@ -342,6 +354,11 @@ namespace BaroUI.Core
                     ParseKeyframes(head.Substring(10).Trim(), body, sheet, file, Line(brace + 1));
                     continue;
                 }
+                if (string.Equals(head, "@font-face", StringComparison.OrdinalIgnoreCase))
+                {
+                    ParseFontFace(body, sheet, file, Line(headAt));
+                    continue;
+                }
                 if (head.StartsWith("@", StringComparison.Ordinal))
                 {
                     Warn(headAt, $"{head.Split(' ')[0]} is not supported, block skipped");
@@ -360,6 +377,79 @@ namespace BaroUI.Core
                 sheet.Rules.Add(rule);
             }
             return sheet;
+        }
+
+        /// <summary>One url(...) item of a src: quoted or bare, an optional format(...) after it (ignored).</summary>
+        private static readonly System.Text.RegularExpressions.Regex FontUrl = new(
+            @"^url\(\s*(?:""(?<u>[^""]*)""|'(?<u>[^']*)'|(?<u>[^""')]*))\s*\)(?:\s+format\([^)]*\))?$",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+
+        /// <summary>@font-face { font-family; src; font-weight; font-style }: a rule, or a diagnostic and no rule. A descriptor not in the list is reported and
+        /// ignored. The src items are kept as written: whether their files exist and stay in the package is StyleEngine's check (ImageCss.ResolvePath).</summary>
+        private static void ParseFontFace(string body, StyleSheet sheet, string file, int line)
+        {
+            string family = null, src = null, weight = null, style = null;
+            foreach (var raw in SplitTop(StripComments(body), ';'))
+            {
+                string d = raw.Trim();
+                if (d.Length == 0) { continue; }
+                int colon = d.IndexOf(':');
+                if (colon <= 0) { sheet.Diagnostics.Add(new Diagnostic(file, line, $"@font-face: '{Clip(d)}' is not a descriptor")); continue; }
+                string name = d.Substring(0, colon).Trim().ToLowerInvariant(), value = d.Substring(colon + 1).Trim();
+                switch (name)
+                {
+                    case "font-family": family = value; break;
+                    case "src": src = value; break;
+                    case "font-weight": weight = value; break;
+                    case "font-style": style = value; break;
+                    default: sheet.Diagnostics.Add(new Diagnostic(file, line, $"@font-face: descriptor {name} is not supported, it is ignored")); break;
+                }
+            }
+            if (string.IsNullOrWhiteSpace(family)) { sheet.Diagnostics.Add(new Diagnostic(file, line, "@font-face needs font-family, block skipped")); return; }
+            var rule = new FontFaceRule { Family = Unquote(family), Line = line };
+            if (FontFamilies.SplitList(family).Count != 1) { sheet.Diagnostics.Add(new Diagnostic(file, line, $"@font-face: font-family '{Clip(family)}' must be one name, block skipped")); return; }
+            rule.Weight = ParseFaceWeight(weight, out string weightProblem);
+            if (weightProblem != null) { sheet.Diagnostics.Add(new Diagnostic(file, line, $"@font-face {rule.Family}: {weightProblem}")); }
+            string st = (style ?? "").Trim().ToLowerInvariant();
+            if (st == "italic" || st.StartsWith("oblique", StringComparison.Ordinal)) { rule.Italic = true; }
+            else if (st.Length > 0 && st != "normal") { sheet.Diagnostics.Add(new Diagnostic(file, line, $"@font-face {rule.Family}: font-style '{Clip(style.Trim())}' is not normal, italic or oblique, normal is used")); }
+            if (string.IsNullOrWhiteSpace(src)) { sheet.Diagnostics.Add(new Diagnostic(file, line, $"@font-face {rule.Family} needs a src url(...), block skipped")); return; }
+            foreach (var part in SplitTop(src, ','))
+            {
+                string p = part.Trim();
+                var m = FontUrl.Match(p);
+                if (m.Success && m.Groups["u"].Value.Trim().Length > 0) { rule.Sources.Add(m.Groups["u"].Value.Trim()); continue; }
+                string why = p.StartsWith("local(", StringComparison.OrdinalIgnoreCase) ? "local() fonts are not supported" : "is not url(\"...\")";
+                sheet.Diagnostics.Add(new Diagnostic(file, line, $"@font-face {rule.Family}: src '{Clip(p)}' {why}, skipped"));
+            }
+            if (rule.Sources.Count == 0) { sheet.Diagnostics.Add(new Diagnostic(file, line, $"@font-face {rule.Family}: no usable src, block skipped")); return; }
+            sheet.FontFaces.Add(rule);
+        }
+
+        /// <summary>The font-weight of an @font-face: normal, bold or 1..1000. A range (two values) keeps its first. Anything else is 400 and a problem text.</summary>
+        private static int ParseFaceWeight(string value, out string problem)
+        {
+            problem = null;
+            string v = (value ?? "").Trim().ToLowerInvariant();
+            if (v.Length == 0 || v == "normal") { return 400; }
+            if (v == "bold") { return 700; }
+            var parts = v.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 0 || !double.TryParse(parts[0], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double n)
+                || double.IsNaN(n) || n < 1 || n > 1000)
+            {
+                problem = $"font-weight '{Clip(value.Trim())}' is not normal, bold or 1..1000, 400 is used";
+                return 400;
+            }
+            if (parts.Length > 1) { problem = $"font-weight '{Clip(value.Trim())}': a range is not supported, {parts[0]} is used"; }
+            return (int)Math.Round(n);
+        }
+
+        /// <summary>A family name as written: quotes removed, inner blanks collapsed (the case is kept for the messages).</summary>
+        private static string Unquote(string value)
+        {
+            string t = (value ?? "").Trim();
+            if (t.Length >= 2 && (t[0] == '"' || t[0] == '\'') && t[t.Length - 1] == t[0]) { t = t.Substring(1, t.Length - 2); }
+            return string.Join(" ", t.Split((char[])null, StringSplitOptions.RemoveEmptyEntries));
         }
 
         /// <summary>@keyframes name { from { ... } 40%, 60% { ... } to { ... } }: stops with their declarations, in the order written.</summary>

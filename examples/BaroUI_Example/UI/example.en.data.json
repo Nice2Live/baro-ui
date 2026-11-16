@@ -1,0 +1,162 @@
+{
+  "lang": "en",
+  "t": {
+    "title": "Submarine “Narwhal”",
+    "subtitle": "Systems status",
+    "diving": "Diving",
+    "refuel": "Refuel",
+    "reset": "Reset",
+    "close": "Close (Esc)",
+    "depth": "Depth",
+    "depthSub": "metres, zones at 350 and 550",
+    "speed": "Speed",
+    "heading": "Heading",
+    "knots": "kn",
+    "power": "Power",
+    "powerSub": "kW by hour",
+    "gen": "Generation",
+    "load": "Load",
+    "batteries": "Batteries",
+    "batteriesSub": "charge, %",
+    "range": "about 3 h left",
+    "ballast": "Ballast",
+    "ballastSub": "m³ by depth",
+    "ballastHint": "Drag the points; double-click adds one",
+    "controls": "Controls",
+    "mode": "Mode",
+    "modeAuto": "Auto",
+    "modeManual": "Manual",
+    "modeSilent": "Silent",
+    "modeDive": "Dive",
+    "trim": "Trim",
+    "eco": "Eco",
+    "normal": "Normal",
+    "boost": "Boost",
+    "lights": "Lights",
+    "sonar": "Sonar",
+    "pump": "Pump",
+    "compartments": "Compartments",
+    "compartmentsSub": "hull and crew",
+    "colName": "Compartment",
+    "colHull": "Hull",
+    "colCrew": "Crew",
+    "colState": "Status",
+    "hull": "Hull",
+    "hullSub": "integrity, %",
+    "hullHint": "The sector takes the colour of its zone"
+  },
+  "sub": {
+    "name": "Narwhal",
+    "depth": 212,
+    "speed": 4.5,
+    "hull": 96
+  },
+  "power": {
+    "labels": [
+      "00",
+      "04",
+      "08",
+      "12",
+      "16",
+      "20",
+      "24",
+      "28",
+      "32",
+      "36",
+      "40",
+      "44"
+    ],
+    "gen": [
+      40,
+      42,
+      44,
+      47,
+      50,
+      52,
+      55,
+      53,
+      50,
+      48,
+      46,
+      44
+    ],
+    "load": [
+      30,
+      35,
+      38,
+      44,
+      46,
+      49,
+      58,
+      61,
+      50,
+      47,
+      42,
+      39
+    ]
+  },
+  "batteries": [
+    {
+      "name": "Battery A",
+      "pct": 82
+    },
+    {
+      "name": "Battery B",
+      "pct": 64
+    },
+    {
+      "name": "Battery C",
+      "pct": 23
+    }
+  ],
+  "ballast": "0:0.4, 75:1.1, 150:1.9, 225:2.5, 300:2.9",
+  "compartments": [
+    {
+      "id": "c1",
+      "name": "Bow",
+      "hull": 98,
+      "crew": 4,
+      "state": "ok",
+      "stateText": "Normal"
+    },
+    {
+      "id": "c2",
+      "name": "Torpedo room",
+      "hull": 91,
+      "crew": 2,
+      "state": "ok",
+      "stateText": "Normal"
+    },
+    {
+      "id": "c3",
+      "name": "Engine room",
+      "hull": 74,
+      "crew": 3,
+      "state": "warn",
+      "stateText": "Leak"
+    },
+    {
+      "id": "c4",
+      "name": "Stern",
+      "hull": 58,
+      "crew": 1,
+      "state": "bad",
+      "stateText": "Sealed"
+    },
+    {
+      "id": "c5",
+      "name": "Control room",
+      "hull": 99,
+      "crew": 6,
+      "state": "ok",
+      "stateText": "Normal"
+    }
+  ],
+  "systems": {
+    "lights": true,
+    "sonar": true,
+    "pump": false
+  },
+  "trim": "normal",
+  "mode": "auto"
+}

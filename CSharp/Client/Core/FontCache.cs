@@ -56,6 +56,19 @@ namespace BaroUI.Core
             if (entries.TryGetValue(key, out var e) && !e.Pinned) { e.Pinned = true; LiveCount--; PinnedCount++; }
         }
 
+        /// <summary>The fonts of keys matching pred stop being pinned and count as idle: the next Sweep gives them back by the usual rules (rule 5 keeps the
+        /// last font of a file). For a window that closed: its faces are no longer in use.</summary>
+        public void Forget(Func<TKey, bool> pred)
+        {
+            foreach (var kv in entries)
+            {
+                var e = kv.Value;
+                if (!pred(kv.Key)) { continue; }
+                if (e.Pinned) { e.Pinned = false; PinnedCount--; LiveCount++; }
+                e.Last = int.MinValue / 2;
+            }
+        }
+
         /// <summary>Call once per frame, before anything draws. Returns the fonts to dispose (the caller disposes each once); the list is reused by
         /// the next call.</summary>
         public IReadOnlyList<TFont> Sweep(int frame)

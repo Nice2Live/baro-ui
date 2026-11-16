@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- ModConfig with a FriendlyName, as in BBE_UI and BBE_Toast: other packages (and this template) compile against the BBE UI assembly by name.
+<!-- ModConfig with a FriendlyName, as in BaroUI and BBE_Toast: other packages (and this template) compile against the BBE UI assembly by name.
      Client only: the page is a window. The template for other modders: see README.md in this folder. -->
 <ModConfig>
   <Assembly Folder="%ModDir%/CSharp/Client" IsScript="true" FriendlyName="BaroUI.Example" Target="Client" />

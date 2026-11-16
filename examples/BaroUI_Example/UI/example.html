@@ -1,5 +1,7 @@
-<!-- Baro-UI example: a submarine status dashboard, the template for a mod on the BBE UI engine (own/BaroUI_Example/README.md).
-     Canvas 1600u x 900u. C# side: CSharp/Client/ExampleView.cs (refuel, reset). Data: UI/example.data.json (same numbers as ExampleSample.cs).
+<!-- Baro-UI example: a submarine status dashboard, the template for a mod on the Baro-UI engine (own/BaroUI_Example/README.md).
+     Canvas 1600u x 900u. C# side: CSharp/Client/ExampleView.cs (refuel, reset, lang). Every word comes from the model (t.*, ExampleTexts.cs) in one
+     language at a time: ru, en or zh (the switch in the header); a Chinese page takes the font Noto Sans SC (Noto Sans has no Chinese glyphs).
+     Data for tools: UI/example.data.json (ru), UI/example.en.data.json, UI/example.zh.data.json.
      Render: tools/ui_host --page own/BaroUI_Example/UI/example.html --data own/BaroUI_Example/UI/example.data.json --size 1600x900 --frames 90 -->
 <html>
 <head>
@@ -7,48 +9,53 @@
   <link rel="stylesheet" href="example.css">
 </head>
 <body>
-<div id="window">
+<div id="window" data-class="zh: lang == 'zh'">
   <header class="top">
     <div class="logo"><i data-icon="ship"></i></div>
     <div class="names">
-      <h1>Субмарина «Нарвал»</h1>
-      <div class="sub">Submarine Narwhal · состояние / status</div>
+      <h1>{{t.title}}</h1>
+      <div class="sub">{{t.subtitle}}</div>
     </div>
     <div class="grow"></div>
-    <div class="status"><span class="live"></span><span>Погружение · Diving</span></div>
-    <button class="btn primary" onclick="refuel()"><i data-icon="fuel"></i><span>Дозаправка · Refuel</span></button>
-    <button class="btn" onclick="reset()"><i data-icon="refresh-cw"></i><span>Сброс · Reset</span></button>
-    <div class="close" onclick="close()" title="Закрыть (Esc) · Close (Esc)"><i data-icon="x"></i></div>
+    <div class="langs">
+      <span class="lang" data-class="on: lang == 'ru'" onclick="lang('ru')">RU</span>
+      <span class="lang" data-class="on: lang == 'en'" onclick="lang('en')">EN</span>
+      <span class="lang cjk" data-class="on: lang == 'zh'" onclick="lang('zh')">中文</span>
+    </div>
+    <div class="status"><span class="live"></span><span>{{t.diving}}</span></div>
+    <button class="btn primary" onclick="refuel()"><i data-icon="fuel"></i><span>{{t.refuel}}</span></button>
+    <button class="btn" onclick="reset()"><i data-icon="refresh-cw"></i><span>{{t.reset}}</span></button>
+    <div class="close" onclick="close()" title="{{t.close}}"><i data-icon="x"></i></div>
   </header>
 
   <main id="grid">
     <section class="card depth">
       <div class="card-h">
         <span class="ico"><i data-icon="gauge"></i></span>
-        <div class="ttl"><b>Глубина</b><span class="en">Depth, m · зона 350 и 550</span></div>
+        <div class="ttl"><b>{{t.depth}}</b><span class="note">{{t.depthSub}}</span></div>
       </div>
       <gauge class="gauge" data-model="sub.depth" min="0" max="700" zones="350, 550" ticks="7" format="0"></gauge>
       <div class="kpis">
-        <div class="kpi"><span class="k">Скорость · Speed</span><span class="v mono">{{sub.speed}} уз</span></div>
-        <div class="kpi"><span class="k">Курс · Heading</span><span class="v mono">042°</span></div>
+        <div class="kpi"><span class="k">{{t.speed}}</span><span class="v"><span class="mono">{{sub.speed}}</span> {{t.knots}}</span></div>
+        <div class="kpi"><span class="k">{{t.heading}}</span><span class="v mono">042°</span></div>
       </div>
     </section>
 
     <section class="card power">
       <div class="card-h">
         <span class="ico"><i data-icon="zap"></i></span>
-        <div class="ttl"><b>Мощность</b><span class="en">Power, kW · by hour</span></div>
+        <div class="ttl"><b>{{t.power}}</b><span class="note">{{t.powerSub}}</span></div>
       </div>
-      <chart class="chart" data-series="генерация: power.gen; нагрузка: power.load" x-labels="power.labels" type="area" format="0" y-min="0"></chart>
-      <div class="legend"><span class="sw s1"></span><span>Генерация · Generation</span><span class="sw s2"></span><span>Нагрузка · Load</span></div>
+      <chart class="chart" data-series="{{t.gen}}: power.gen; {{t.load}}: power.load" x-labels="power.labels" type="area" format="0" y-min="0"></chart>
+      <div class="legend"><span class="sw s1"></span><span>{{t.gen}}</span><span class="sw s2"></span><span>{{t.load}}</span></div>
     </section>
 
     <section class="card batt">
       <div class="card-h">
         <span class="ico"><i data-icon="battery-charging"></i></span>
-        <div class="ttl"><b>Аккумуляторы</b><span class="en">Batteries, %</span></div>
+        <div class="ttl"><b>{{t.batteries}}</b><span class="note">{{t.batteriesSub}}</span></div>
         <span class="grow"></span>
-        <span class="en mono">запас ≈ 3 ч · range 3 h</span>
+        <span class="note">{{t.range}}</span>
       </div>
       <div class="bats">
         <div class="bat" data-for="b in batteries">
@@ -61,61 +68,61 @@
     <section class="card ballast">
       <div class="card-h">
         <span class="ico"><i data-icon="waves"></i></span>
-        <div class="ttl"><b>Балласт</b><span class="en">Ballast, м³ по глубине · depth</span></div>
+        <div class="ttl"><b>{{t.ballast}}</b><span class="note">{{t.ballastSub}}</span></div>
       </div>
       <curve class="curve" data-model="ballast" x-min="0" x-max="300" y-min="0" y-max="3" snap="25 0.1" mode="smooth" monotone max-points="6"></curve>
-      <div class="caption">Тяните точки · Drag points · двойной щелчок · double-click adds</div>
+      <div class="caption">{{t.ballastHint}}</div>
     </section>
 
     <section class="card controls">
       <div class="card-h">
         <span class="ico"><i data-icon="settings"></i></span>
-        <div class="ttl"><b>Управление</b><span class="en">Controls</span></div>
+        <div class="ttl"><b>{{t.controls}}</b></div>
       </div>
       <div class="row2">
         <div class="col">
-          <span class="field">Режим · Mode</span>
+          <span class="field">{{t.mode}}</span>
           <select data-model="mode">
-            <option value="auto">Автомат · Auto</option>
-            <option value="manual">Ручной · Manual</option>
-            <option value="silent">Тихий · Silent</option>
-            <option value="dive">Погружение · Dive</option>
+            <option value="auto">{{t.modeAuto}}</option>
+            <option value="manual">{{t.modeManual}}</option>
+            <option value="silent">{{t.modeSilent}}</option>
+            <option value="dive">{{t.modeDive}}</option>
           </select>
         </div>
         <div class="col">
-          <span class="field">Дифферент · Trim</span>
+          <span class="field">{{t.trim}}</span>
           <div class="seg">
-            <label class="seg-i"><input type="radio" name="trim" value="eco" data-model="trim"><span class="s-ru">Эко</span><span class="s-en">Eco</span></label>
-            <label class="seg-i"><input type="radio" name="trim" value="normal" data-model="trim"><span class="s-ru">Норма</span><span class="s-en">Normal</span></label>
-            <label class="seg-i"><input type="radio" name="trim" value="boost" data-model="trim"><span class="s-ru">Буст</span><span class="s-en">Boost</span></label>
+            <label class="seg-i"><input type="radio" name="trim" value="eco" data-model="trim"><span>{{t.eco}}</span></label>
+            <label class="seg-i"><input type="radio" name="trim" value="normal" data-model="trim"><span>{{t.normal}}</span></label>
+            <label class="seg-i"><input type="radio" name="trim" value="boost" data-model="trim"><span>{{t.boost}}</span></label>
           </div>
         </div>
       </div>
       <div class="col">
-        <span class="field">Скорость · Speed <span class="mono">{{sub.speed}} уз</span></span>
+        <span class="field">{{t.speed}} <span class="mono">{{sub.speed}}</span> {{t.knots}}</span>
         <input type="range" min="0" max="10" step="0.5" data-model="sub.speed">
       </div>
       <div class="opts">
-        <label class="opt"><input type="checkbox" data-model="systems.lights"><span>Свет · Lights</span></label>
-        <label class="opt"><input type="checkbox" data-model="systems.sonar"><span>Сонар · Sonar</span></label>
-        <label class="opt"><input type="checkbox" data-model="systems.pump"><span>Помпа · Pump</span></label>
+        <label class="opt"><input type="checkbox" data-model="systems.lights"><span>{{t.lights}}</span></label>
+        <label class="opt"><input type="checkbox" data-model="systems.sonar"><span>{{t.sonar}}</span></label>
+        <label class="opt"><input type="checkbox" data-model="systems.pump"><span>{{t.pump}}</span></label>
       </div>
     </section>
 
     <section class="card list-card">
       <div class="card-h">
         <span class="ico"><i data-icon="layers"></i></span>
-        <div class="ttl"><b>Отсеки</b><span class="en">Compartments · целостность и экипаж / hull and crew</span></div>
+        <div class="ttl"><b>{{t.compartments}}</b><span class="note">{{t.compartmentsSub}}</span></div>
       </div>
       <div class="list">
         <div class="tr th">
-          <span class="c-name">Отсек · Compartment</span>
-          <span class="c-hull">Корпус · Hull</span>
-          <span class="c-crew">Экипаж · Crew</span>
-          <span class="c-state">Статус · Status</span>
+          <span class="c-name">{{t.colName}}</span>
+          <span class="c-hull">{{t.colHull}}</span>
+          <span class="c-crew">{{t.colCrew}}</span>
+          <span class="c-state">{{t.colState}}</span>
         </div>
         <div class="tr" data-for="c in compartments" data-key="c.id" data-class="warnrow: c.state == 'warn'; badrow: c.state == 'bad'">
-          <span class="c-name"><b>{{c.name}}</b><span class="en2">{{c.en}}</span></span>
+          <span class="c-name"><b>{{c.name}}</b></span>
           <span class="c-hull"><span class="bar small"><span class="fill" data-class="low: c.hull < 75" style="width: {{c.hull}}%"></span></span><span class="mono">{{c.hull}} %</span></span>
           <span class="c-crew mono">{{c.crew}}</span>
           <span class="c-state"><span class="pill" data-class="ok: c.state == 'ok'; warn: c.state == 'warn'; bad: c.state == 'bad'">{{c.stateText}}</span></span>
@@ -126,10 +133,10 @@
     <section class="card hull">
       <div class="card-h">
         <span class="ico"><i data-icon="shield-check"></i></span>
-        <div class="ttl"><b>Корпус</b><span class="en">Hull integrity, %</span></div>
+        <div class="ttl"><b>{{t.hull}}</b><span class="note">{{t.hullSub}}</span></div>
       </div>
       <gauge class="gauge hull-g" data-model="sub.hull" min="0" max="100" zones="40, 75" fill="sector" format="0"></gauge>
-      <div class="caption">Сектор: цвет по зоне значения · sector colour by zone</div>
+      <div class="caption">{{t.hullHint}}</div>
     </section>
   </main>
 </div>

@@ -259,7 +259,7 @@ namespace BaroUI.Render
                 w.CanvasInput.Set(key, ev => CurveMouse(h, e, ev));
                 h.Registered = true;
             }
-            w.CanvasInput.Painted(e, cr, p.Xf);
+            w.CanvasInput.Painted(e, p.Abs(cr), p.Xf);   // a record is on screen even when the paint runs in a rounded target (Painter.Abs)
         }
 
         private void CurveGrid(SpriteBatch sb, Rectangle plot, double x0, double x1, double y0, double y1, Color col)
@@ -630,7 +630,7 @@ namespace BaroUI.Render
                 w.CanvasInput.Set(key, ev => ChartMouse(h, e, ev));
                 h.Registered = true;
             }
-            w.CanvasInput.Painted(e, cr, p.Xf);
+            w.CanvasInput.Painted(e, p.Abs(cr), p.Xf);   // a record is on screen even when the paint runs in a rounded target (Painter.Abs)
         }
 
         private static Color SeriesColor(ComputedStyle s, int i, float op) => VarColor(s, SeriesVar(i), SeriesPalette[i % SeriesPalette.Length], op);

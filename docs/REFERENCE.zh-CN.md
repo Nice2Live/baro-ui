@@ -6,9 +6,9 @@
 
 参考手册版本：2026-11-16。主版本为俄文；英文及简体中文译文均以此文件为准翻译。
 
-包：`own/BBE_UI`（命名空间 `BaroUI`，LuaCs 模组，通过 `ModConfig.xml` 加载）。引擎对外名称：Baro-UI（所有者决定，2026-11-15）。
+包：`own/BaroUI`（命名空间 `BaroUI`，LuaCs 模组，通过 `ModConfig.xml` 加载）。引擎对外名称：Baro-UI（所有者决定，2026-11-15）。
 
-来源：`docs/ui/AUTHORING.md`（作者指南）、`docs/ui/PERF.md`、`docs/ui/AUDIT_STAGE_C.md`、`docs/ui/AUDIT_STAGE_D.md`、`docs/HANDOFF.md`（第 0 节）、`docs/ui/DESIGN_*.md`、代码 `own/BBE_UI/CSharp/Client` 与 `own/BBE_UI/CSharp/Shared`、页面 `own/BBE_UI/UI/*.html`、工具 `tools/ui_host`、`tools/ui_preview`、`tools/ui_test`。
+来源：`docs/ui/AUTHORING.md`（作者指南）、`docs/ui/PERF.md`、`docs/ui/AUDIT_STAGE_C.md`、`docs/ui/AUDIT_STAGE_D.md`、`docs/HANDOFF.md`（第 0 节）、`docs/ui/DESIGN_*.md`、代码 `own/BaroUI/CSharp/Client` 与 `own/BaroUI/CSharp/Shared`、页面 `own/BaroUI/UI/*.html`、工具 `tools/ui_host`、`tools/ui_preview`、`tools/ui_test`。
 
 ## 0. 如何阅读本参考
 
@@ -36,7 +36,7 @@ BBE UI 是为游戏 Barotrauma 开发的自有 HTML/CSS 引擎。游戏内没有
 | 阶段 | 文件 | 作用 |
 |---|---|---|
 | HTML 解析 | `Core/HtmlParser.cs`、`Core/Dom.cs` | `Element`/`TextNode` 树，void 标签，`style`、`script`、`textarea` 的原始文本，实体表 |
-| CSS 解析 | `Core/CssParser.cs`、`Core/CssValues.cs` | 规则、选择器、声明、`@keyframes`；`@media`、`@import`、`@font-face` 会被跳过并给出提示 |
+| CSS 解析 | `Core/CssParser.cs`、`Core/CssValues.cs` | 规则、选择器、声明、`@keyframes`、`@font-face`（第 7.7 节）；`@media`、`@import` 会被跳过并给出提示 |
 | 数据 | `Core/Template.cs`、`Core/Expr.cs` | `{{…}}`、`data-for`、`data-if`、`data-class`、`data-model`、`data-t`、处理器 |
 | 层叠 | `Core/StyleEngine.cs` | 值、继承、`var()`、`!important`、状态（`:hover` 等）、样式缓存 |
 | 布局 | `Core/LayoutEngine.cs`、`Core/LayoutBox.cs` | 块级、行内、flex、grid、定位、增量布局 |
@@ -59,7 +59,7 @@ BBE UI 是为游戏 Barotrauma 开发的自有 HTML/CSS 引擎。游戏内没有
 
 ### 1.3. 运行环境
 
-- 这是 **LuaCs C# 模组**：`own/BBE_UI/ModConfig.xml` 引入 `CSharp/Shared`（`IsScript="true"`，`FriendlyName="BaroUI"`）和 `CSharp/Client`（`Target="Client"`，同名）（「已核对代码」：`ModConfig.xml`）。
+- 这是 **LuaCs C# 模组**：`own/BaroUI/ModConfig.xml` 引入 `CSharp/Shared`（`IsScript="true"`，`FriendlyName="BaroUI"`）和 `CSharp/Client`（`Target="Client"`，同名）（「已核对代码」：`ModConfig.xml`）。
 - 游戏和 LuaCs 通过 Harmony 进行拦截（「已核对代码」：`Api/BaroUi.cs`，`Init`）：
   - `DebugConsole.AddToGUIUpdateList` 的前缀：窗口在这里获得帧与输入；
   - 暂停菜单的前缀：Esc（`PauseMenuPrefix`）。
@@ -73,7 +73,7 @@ BBE UI 是为游戏 Barotrauma 开发的自有 HTML/CSS 引擎。游戏内没有
 ### 2.1. 包的组成
 
 ```
-own/BBE_UI/
+own/BaroUI/
   ModConfig.xml        LuaCs 程序集（Shared 与 Client，FriendlyName BaroUI）
   filelist.xml         contentpackage "BBE UI"，modversion 0.0.1-bbe，corepackage false，gameversion 1.13.5.0
   Xml/sync.xml         空：使本包进入服务器列表，使客户端将其排在依赖它的包之上
@@ -84,17 +84,17 @@ own/BBE_UI/
   UI/                  页面：*.html 与 *.css（controls、inputs、charts、anim_demo、pseudo_demo、test）
 ```
 
-（「已核对代码」：`own/BBE_UI` 的目录与文件组成；`filelist.xml` 中的游戏版本为 1.13.5.0。）
+（「已核对代码」：`own/BaroUI` 的目录与文件组成；`filelist.xml` 中的游戏版本为 1.13.5.0。）
 
 Noto Sans 字体**不包含**在本包中：它从已安装游戏的文件夹（`Content/Fonts/NotoSans`）只读取（「已核对代码」：`Core/FontFamilies.cs`）。
 
 包会自行定位：`BaroUi.FindPackageDir` 查找已启用、名称为 `Baro-UI` 且含有文件 `Fonts/JetBrainsMono-Regular.ttf` 的包（「已核对代码」：`Api/BaroUi.cs`，`FindPackageDir`）。
 
-不启动游戏检查构建：`py -X utf8 tools/cscheck.py BBE_UI`（依据 `docs/HANDOFF.md`，第 3 节；已核对脚本存在）。
+不启动游戏检查构建：`py -X utf8 tools/cscheck.py BaroUI`（依据 `docs/HANDOFF.md`，第 3 节；已核对脚本存在）。
 
 ### 2.2. 最小页面
 
-`own/BBE_UI/UI/fuel.html`：
+`own/BaroUI/UI/fuel.html`：
 
 ```html
 <!doctype html>
@@ -113,7 +113,7 @@ Noto Sans 字体**不包含**在本包中：它从已安装游戏的文件夹（
 </html>
 ```
 
-`own/BBE_UI/UI/fuel.css`：
+`own/BaroUI/UI/fuel.css`：
 
 ```css
 .panel { width: 400u; padding: 16u; background-color: #0b1418; border: 1u solid #4a6a6c; border-radius: 6u; }
@@ -399,7 +399,7 @@ IME：引擎把输入框在屏幕上的矩形交给游戏（`UiControls.cs`，�
 | `data-class="名称: 条件; 名称2: 条件"` | 按条件设置类 | 缺少冒号的写法会给出提示（`Template.cs`，第 132 行） |
 | `data-disabled="条件"` | 按条件设置 `disabled` | |
 | `data-model="路径"` | 字段与数据双向绑定 | 用于 `input`、`textarea`、`curve`、`chart`、`gauge`；代码编辑器写入模型的频率不超过每帧一次（依据 AUTHORING） |
-| `data-t="id"`、`data-t-title="id"`、`data-t-<属性>="id"` | 翻译 | 文本按 id 在**读取页面时**替换（`Core/Localizer.cs`）；无文本时页面给出提示，元素保持标记中的样子。来源为游戏的 `TextManager`（`Api/BaroUi.cs`，第 44 行）。`own/BBE_UI` 包中没有 `Localization` 文件夹（依据包的组成）。包的文本与相邻包一样进入 `TextManager`：在 `filelist.xml` 中加入 `<Text file="%ModDir%/Localization/English.xml" />`（依据 `own/BBE_Mods/filelist.xml` 与 `own/BBE_Terminal/filelist.xml`）；游戏是否对本页面如此加载，未在游戏中验证。AUTHORING 中原有的「包的文本文件」一句已于 2026-11-16 修正。含 `{{…}}` 的文本在替换之后再绑定 |
+| `data-t="id"`、`data-t-title="id"`、`data-t-<属性>="id"` | 翻译 | 文本按 id 在**读取页面时**替换（`Core/Localizer.cs`）；无文本时页面给出提示，元素保持标记中的样子。来源为游戏的 `TextManager`（`Api/BaroUi.cs`，第 44 行）。`own/BaroUI` 包中没有 `Localization` 文件夹（依据包的组成）。包的文本与相邻包一样进入 `TextManager`：在 `filelist.xml` 中加入 `<Text file="%ModDir%/Localization/English.xml" />`（依据 `own/BBE_Mods/filelist.xml` 与 `own/BBE_Terminal/filelist.xml`）；游戏是否对本页面如此加载，未在游戏中验证。AUTHORING 中原有的「包的文本文件」一句已于 2026-11-16 修正。含 `{{…}}` 的文本在替换之后再绑定 |
 
 内置处理器（「已核对代码」：`Render/UiWindow.cs`，第 153–156 行）：
 
@@ -563,7 +563,7 @@ IME：引擎把输入框在屏幕上的矩形交给游戏（`UiControls.cs`，�
 - 元素的状态也作用于该框：`.a:hover::before { color: #f88 }`。
 - `content`：带引号的字符串，可使用 CSS 转义（`"\201C"`）；`attr(名称)`，即属性值；`icon(名称)`，即 Lucide 图标（与 `data-icon` 相同，第 7.2 节；若规则未设置 `font-family`，则字体为 `lucide`）。各部分连续拼接：`content: "№ " attr(data-id)`。`none` 与 `normal` 表示没有框。`counter()`、`counters()`、`url()` 不生成框，并在日志中给出一条提示（「已核对代码」：`StyleEngine.cs`，第 757 行）。
 - 不支持：`::first-line`、`::first-letter`、`::marker`、`::selection`、`::placeholder`、`counter()`、`counters()`、`content: url(…)`。
-- 示例：`own/BBE_UI/UI/pseudo_demo.html` 与 `pseudo_demo.css`。
+- 示例：`own/BaroUI/UI/pseudo_demo.html` 与 `pseudo_demo.css`。
 
 ### 4.6. 属性
 
@@ -749,8 +749,8 @@ IME：引擎把输入框在屏幕上的矩形交给游戏（`UiControls.cs`，�
 圆角与裁剪（依据 AUTHORING 以及 `docs/ui/PERF.md`，「按 overflow 圆角裁剪」一节）：
 
 - `overflow: hidden` 按**矩形**裁剪子元素，不按圆角：伸入圆角块角落的子元素会在直角中可见。
-- 圆角裁剪的几何已存在（`Core/RoundedClip.cs`），但绘制未启用：在一帧中途切换绘制目标会清空屏幕（已在 `ui_host` 上核对，`PERF.md`）。
-- 位于圆角卡片中的图片会伸入角落。这是同一限制。
+- 在两个轴上都为 `overflow: hidden|auto|scroll` 且带 `border-radius` 的块，当子元素伸入角落时，整个子树会按圆弧裁剪（帧开始时的一趟，`PERF.md`「按 overflow 圆角裁剪」一节；尚未在游戏中核对）。每个窗口每帧最多 32 个此类块；`scale` 内的块与块自身的文字按矩形裁剪。
+- 位于圆角卡片中的图片会按圆弧裁剪，与子元素背景相同（仅在 `ui_host` 上以渐变背景核对：那里图片不显示）。
 
 - **边缘覆盖（通道 G，2026-11-16；未在游戏中验证）。** 圆角块、圆环、角与圆的边缘（`UiDraw.Disc`、角纹理）以解析方式计算：像素中心到边缘的距离经由宽 1 px 的线性过渡得到覆盖率（`Core/Coverage.cs`，`Edge`）。网格上的直边恰好得到 0 或 1，因此圆弧与直线的同宽度一致。原先的 4×4 采样与 0.55–0.7 的幂次修正已移除。1–2 px 的细圆环：部分覆盖的像素以指数 0.8（1 px）与 0.9（2 px）提升，即 `Coverage.ThinLift`（「已核对代码」）；这些数值是通过计算选定的，并非依据 Chrome 截图拟合。超过 2 px 的不做修正；完全覆盖与完全空白的像素不变。限制：不生成分数半径的遮罩（半径会取整为整数像素，`Core/Corners.cs`，`CornerPx`）；圆角裁剪未启用（第 11.1 节）。
 
@@ -1246,7 +1246,7 @@ window.SetDrop("cards", e => { if (e.Phase == UiDropPhase.Cancel) { Reset(e.Sour
 
 ## 6. 图表与绘制：UiDraw、`<curve>`、`<chart>`、`<gauge>`
 
-几何与规则位于 `Core/`（测试 `DrawKitTests`、`ChartTests`、`tools/ui_test`）；绘制位于 `Render/UiDraw.cs`、`Render/UiCharts.cs`（「已核对代码」）。示例页面：`own/BBE_UI/UI/charts.html`，数据 `charts.data.json`；截图：`tools/ui_host --page own/BBE_UI/UI/charts.html --data own/BBE_UI/UI/charts.data.json --frames 90`（依据 AUTHORING）。
+几何与规则位于 `Core/`（测试 `DrawKitTests`、`ChartTests`、`tools/ui_test`）；绘制位于 `Render/UiDraw.cs`、`Render/UiCharts.cs`（「已核对代码」）。示例页面：`own/BaroUI/UI/charts.html`，数据 `charts.data.json`；截图：`tools/ui_host --page own/BaroUI/UI/charts.html --data own/BaroUI/UI/charts.data.json --frames 90`（依据 AUTHORING）。
 
 图表的通用说明：`curve`、`chart` 与 `gauge` 是 UA 规则 `curve, chart, gauge { display: block }` 下的块（2026-11-16 添加，`Core/StyleEngine.cs`，`UserAgentCss`；此前它们是 `inline`）。尺寸由 CSS 设置（`height`、`width`）。`UI/charts.html` 自己设置了 `display: block`，与新规则一致（「已核对代码」；「未在游戏中验证」）。
 
@@ -1365,6 +1365,7 @@ Window.SetCanvas("pad", (sb, r) =>
 | Caveat | `caveat`、`cursive`、`handwriting`、`hand` | `Fonts/Caveat-Regular.ttf`、`-Bold.ttf` | 400、700 | 手写体；斜体为合成 |
 | PT Serif | `pt serif`、`serif`、`ui-serif`、`georgia`、`times new roman`、`times`、`newspaper` | `Fonts/PTSerif-Regular.ttf`、`-Bold.ttf`、`-Italic.ttf` | 400、700，斜体 400 | 真正的斜体仅限常规字重 |
 | Noto Sans | `noto sans`、`sans-serif`、`ui-sans-serif`、`system-ui`、`sans`、`proportional`、`arial`、`helvetica`、`segoe ui` | **来自游戏文件夹**：`Content/Fonts/NotoSans/NotoSans-Regular.ttf`、`-Medium`、`-SemiBold`、`-Bold` | 400、500、600、700 | 比例字体，含西里尔字母；只读；没有斜体（合成） |
+| Noto Sans SC | `noto sans sc`、`noto sans cjk sc`、`notosanscjksc`、`notosanssc`、`sans-serif-sc`、`microsoft yahei`、`pingfang sc`、`simhei`、`chinese` | **来自游戏文件夹**：`Content/Fonts/NotoSans/NotoSansCJKsc-Medium.otf`、`-Bold.otf` | 500（400 也用它）、700 | 简体中文：Noto Sans 不含汉字，引擎也没有按字符的字体回退，因此中文文本需指定此字体族（「已核对代码」：`Core/FontFamilies.cs`；「未在游戏中验证」） |
 | Lucide | `lucide`、`icons`、`icon` | `Fonts/Lucide.ttf` | 400 | 图标，第 7.2 节 |
 
 说明：
@@ -1427,9 +1428,23 @@ Window.SetCanvas("pad", (sb, r) =>
 
 ---
 
+### 7.7. 自带字体：`@font-face`、`BaroUi.RegisterFont`
+
+按代码核对：`Core/CssParser.cs`（`ParseFontFace`、`ParseFaceWeight`）、`Core/FontFaces.cs`（`FontFile`、`FontScope`）、`Core/FontFamilies.cs`（`ResolveIn`、`FindIn`）、`Core/StyleEngine.cs`（`LoadFontFace`、`Adopt`）、`Render/UiFonts.cs`（`Resolve`、`Release`）、`Core/FontCache.cs`（`Forget`）、`Api/BaroUi.cs`（`RegisterFont`）。测试：`tools/ui_test` 的 `font-faces`（解析、路径、度量、族顺序、`RegisterFont`、缓存）。`Caveat`、`PT Serif`、`JetBrains Mono`、`Lucide` 的度量与第 7.1 节的表一致（测试）。`own/BaroUI_Example` 的标题用模组字体文件，经 `tools/ui_host` 截图核对：没有文件（路径在包外）时出现一行提示并回退到备用字体。未在游戏中验证：从模组文件夹加载 `ScalableFont`，以及窗口关闭时释放原生字形。
+
+- 解析：`@font-face { font-family; src; font-weight; font-style }`。`src` 是 `url(...)` 列表；`format(...)` 被忽略；`local()` 和非 `url` 的项被跳过并给出提示。`font-weight`：`normal` 为 400，`bold` 为 700，数字 1..1000；区间 `100 900` 取第一个数字并给出提示；其他值为 400 并给出提示。`font-style`：`normal`、`italic`、`oblique`。未知描述符只给提示，块保留。没有族名、没有 `src` 或族名不是单个名字的块被跳过（按代码核对；测试）。
+- 路径：相对页面文件夹，经 `ImageCss.ResolvePath`（与图片相同）：必须在包内、`filelist.xml` 旁；`http:`、`//`、`data:`、`file:` 和绝对路径被拒绝（测试 `font-face path`）。取 `src` 中第一个可读的文件。
+- 度量：`FontFile.TryReadMetrics` 读取 `head`、`hhea`（否则 `OS/2` win），支持 TrueType 与带 CFF 的 OpenType。集合（TTC）、WOFF、WOFF2 带原因被拒绝。自带字体的行高取其自身度量（`FontFace.Ascent`、`Descent`）。
+- 作用域：每个窗口有自己的 `FontScope`（`StyleEngine.FontFaces`）。`FontFamilies.FindIn(scope, value)`：列表中的名字依次尝试，先窗口的族，再表格；第一个已知的生效。带自有族的窗口不与其他窗口共享样式（`StyleEngine.Adopt`），因此其样式不会比窗口存活更久。
+- 没有文件或不可读：该族不进入作用域；列表依次尝试下一个名字，然后是 `Default`（测试 `font resolution`）。每条规则一条提示（`@font-face X: ...`）。
+- 字重与字形：最接近的字重和合成斜体与内置族相同（`FontFamilies.Pick`；测试）。
+- `BaroUi.RegisterFont(family, file, weight = 400, italic = false)`：对调用之后打开的窗口生效（打开窗口时读取注册表）。族名不是单个名字（含逗号）或路径不是绝对路径时抛出 `ArgumentException`。文件缺失时在窗口中给出提示 `RegisterFont: ...`（测试 `RegisterFont`）。
+- 内存：字体按字形与字号缓存在 `UiFonts` 中（`FontCache`，与内置字体相同）。`UiWindow.Close` 和热重载（`TakeOver`）调用 `UiFonts.Release`：字体不再被固定，并按缓存规则过期（闲置超过 120 帧，或达到 `MaxLive` 上限）。文件的最后一个字体作为锚点保留（`FontCache` 规则 5），因此每个模组文件的一个 `ScalableFont` 会一直保留，直到同一文件的另一个字体出现（未在游戏中验证：原生字形）。
+- 限制：不限制文件大小和字形数量；模组文件的西里尔字母覆盖范围未检查（内置字体在制作表格时已检查）；窗口打开期间文件消失时，会使用 `Default` 替代并在日志中写一行（而不是列表中的下一个名字）；`RegisterFont` 不检查路径是否位于调用方模组的包内。
+
 ## 8. C# API：公开类型与成员
 
-命名空间：`BaroUI.Api`（`BaroUi`、`BaroUiView`）、`BaroUI.Core`（解析、样式、输入、几何）、`BaroUI.Render`（`UiWindow`、绘制、控件）。除非另有说明，列出的所有成员都已通过代码核对（`own/BBE_UI/CSharp/Client`）。
+命名空间：`BaroUI.Api`（`BaroUi`、`BaroUiView`）、`BaroUI.Core`（解析、样式、输入、几何）、`BaroUI.Render`（`UiWindow`、绘制、控件）。除非另有说明，列出的所有成员都已通过代码核对（`own/BaroUI/CSharp/Client`）。
 
 稳定的公开 API（每个成员一行）、引擎版本和破坏性变更规则见：[`API.md`](API.md)（俄文）。模组中检查版本：`BaroUi.Requires("0.2.0", 名称)`。
 
@@ -1634,7 +1649,7 @@ Window.SetCanvas("pad", (sb, r) =>
 | `baroui problems [page]` | 将所有窗口的提示写入日志：`文件:行号: 文本` |
 | `baroui anim [on\|off]` | 开关窗口动画 |
 | `baroui anim fps N\|max` | 动画长度的默认采样频率（30）；`max`——每帧；块的 `layout-fps` 优先 |
-| `baroui src <文件夹>\|off` | 从文件夹（例如 `own/BBE_UI/UI`）读取页面，而不是从已安装的包读取 |
+| `baroui src <文件夹>\|off` | 从文件夹（例如 `own/BaroUI/UI`）读取页面，而不是从已安装的包读取 |
 
 提示行：`Usage: baroui open <page> | close [page] | reload [page] | list | watch [on|off] | debug [on|off] | anim [on|off|fps N|max] | problems [page] | src [dir|off]`。
 
@@ -1649,12 +1664,12 @@ Window.SetCanvas("pad", (sb, r) =>
 
 ### 9.3. `tools/ui_host` 与参考快照
 
-- `tools/ui_host`——控制台宿主（`ui_host.csproj`、`Program.cs`、`ModsScenario.cs`、`Script.cs`；`--data` 通过 `own/BBE_UI/CSharp/Client/Core/JsonModel.cs` 读取，与 `OpenPage` 相同的代码）。使用真正的 `UiWindow` 与 `Painter` 将页面绘制为 PNG；Noto Sans 字体取自游戏文件夹（只读）（依据 AUTHORING；依据文件夹内容核对）。
+- `tools/ui_host`——控制台宿主（`ui_host.csproj`、`Program.cs`、`ModsScenario.cs`、`Script.cs`；`--data` 通过 `own/BaroUI/CSharp/Client/Core/JsonModel.cs` 读取，与 `OpenPage` 相同的代码）。使用真正的 `UiWindow` 与 `Painter` 将页面绘制为 PNG；Noto Sans 字体取自游戏文件夹（只读）（依据 AUTHORING；依据文件夹内容核对）。
 - 构建：`cd tools/ui_host && dotnet build -c Release && cd ../..`（依据 AUTHORING）。
 - 参数：`--page <文件>`、`--data <json>`、`--frames N`（依据 AUTHORING 与 `snap.py`）。
 - 限制：`ui_host` 不会把按键传给焦点（AUTHORING，「图表」一节）。
 - `tools/ui_host/snap.py`——快照对比：
-  - `PAGES`——页面列表：`controls`、`inputs`、`anim_demo`（来自 `own/BBE_UI/UI`）、`dialog`（`own/BBE_Dialog/UI/dialog.html`）以及 `toast`（`own/BBE_Toast/UI/toast.html`；这些是其他包，不是 `BBE_UI`）。
+  - `PAGES`——页面列表：`controls`、`inputs`、`anim_demo`（来自 `own/BaroUI/UI`）、`dialog`（`own/BBE_Dialog/UI/dialog.html`）以及 `toast`（`own/BBE_Toast/UI/toast.html`；这些是其他包，不是 `BaroUI`）。
   - `SIZE = 960x540`，`FRAMES = 90`（游戏时间 1.5 秒）。
   - 参数：`--only <名称>`、`--update`（写入参考）、`--selftest`（检查比较本身）、`--tol 8`（每通道阈值，0–255）、`--share 0.001`（不同像素的比例）。
   - 结果：不匹配时退出码为 1；`out/diff/<页面>.png`（不同的像素标为红色）。
@@ -1839,7 +1854,7 @@ AUDIT C 中的旧上限（第 7–8 条：每个 16 MB 的遮罩最多 256 个�
 
 **规则与选择器**
 
-- `@media`、`@import`、`@font-face`、`@supports`、`@layer`、`@container`、`@namespace`。有 `@keyframes`。
+- `@media`、`@import`、`@supports`、`@layer`、`@container`、`@namespace`。有 `@keyframes` 和 `@font-face`（第 7.7 节）。
 - 属性操作符：`[a^=…]`、`[a$=…]`、`[a*=…]`、`[a~=…]`、`[a|=…]`。
 - 除 `::before`/`::after` 外的伪元素：`::marker`、`::selection`、`::placeholder`、`::first-line`、`::first-letter`。
 - 伪类：`:link`、`:visited`、`:empty`、`:is()`、`:where()`、`:first-of-type`、`:nth-of-type`、`:lang()`、`:target`、`:scope`、`:required`、`:invalid`、`:placeholder-shown`、`:nth-child(2n+1)`（不解析 `an+b`，不匹配）。
@@ -1868,7 +1883,6 @@ AUDIT C 中的旧上限（第 7–8 条：每个 16 MB 的遮罩最多 256 个�
 
 **绘制与图片**
 
-- 按 `overflow` 对子元素做圆角裁剪（沿弧线裁剪）——不支持（几何存在，绘制未启用）。
 - 背景图片与 `<img>` 的圆角——角为直角。
 - `outline` 的 `dashed`/`dotted` 描边——实线。
 - 角半径不同时的渐变与阴影——阴影与轮廓使用同一半径。
@@ -1894,7 +1908,7 @@ AUDIT C 中的旧上限（第 7–8 条：每个 16 MB 的遮罩最多 256 个�
 **其他**
 
 - JavaScript、`eval`、网络、`http(s)://`、`data:`、`file:`，以及图片与字体地址中的绝对路径。
-- 包的字体：没有 `@font-face`；只有第 7.1 节中的字体族。
+- 包的字体：`@font-face` 与 `BaroUi.RegisterFont` 可用（第 7.7 节）；没有它们时只有第 7.1 节中的字体族。
 - RTL 语言、竖排文字——不支持。
 - 打印、无障碍（屏幕阅读）——不支持。
 - 抗锯齿：弧线、斜线与角的边缘显得生硬（第 11.2 节）。
@@ -1905,7 +1919,6 @@ AUDIT C 中的旧上限（第 7–8 条：每个 16 MB 的遮罩最多 256 个�
 
 | 编号 | 内容 | 状态 |
 |---|---|---|
-| 1 | 子元素按圆角裁剪（`overflow` 与 `border-radius`）：几何存在（`Core/RoundedClip.cs`），绘制未启用——在帧中途切换绘制目标会清空屏幕（已在 `ui_host` 上核对） | 未完成；需要在帧开始时的一趟与 `PreserveContents`（未核对） |
 | 2 | 抗锯齿：不在像素网格上的圆角与边缘显得像素化且生硬（所有者，2026-11-16） | 通道 G 已于 2026-11-16 完成，未在游戏中验证：圆角、圆环与角的边缘以解析覆盖率计算，经由 1 px 的线性过渡（`Core/Coverage.cs`、`Core/Corners.cs`、`Core/RoundedClip.cs`、`Render/Painter.cs`、`Render/UiDraw.cs`）。旧的 4×4 采样与 0.55–0.7 幂次修正已移除。1–2 px 细圆环以 0.8（1 px）与 0.9（2 px）的指数提升（`Coverage.ThinLift`）：数值通过计算选定（在线性空间中半覆盖的浅色线在 sRGB 中光线更少），并非依据 Chrome 截图拟合。剩余：不生成分数半径的遮罩，半径取整为整数 px（`Corners.CornerPx`）；页面图片以 `PointClamp` 绘制（`UiImages.cs`，约第 180 行）；需与 Chrome 及游戏中的外观对比 |
 | 3 | 缩放时的阴影与渐变：烘焙按帧限制；快速缩放时阴影可能跳动或闪烁一帧 | 已完成（审计 C，第 1–2 条），游戏中未测量 |
 | 4 | 块阴影与圆角渐变：阴影与轮廓使用同一半径 | 已记录（审计 C，第 3 条——渐变按角区分；阴影与轮廓不区分） |
@@ -1939,7 +1952,7 @@ AUDIT C 中的旧上限（第 7–8 条：每个 16 MB 的遮罩最多 256 个�
 - **游戏中的测量。** 阴影与渐变的烘焙时间；`:has()` 的成本；绘制分配；帧中图表的成本。
 - **地图。** 游戏中的所有模组管理器场景（`HANDOFF`，阶段 B6 等待游戏）。
 - **LuaCs。** 标准（stock）LuaCs 上窗口的工作情况——未验证（`HANDOFF`，第 0 节，关于标准 LuaCs 的条目）。
-- **原样包。** `own/BBE_UI` 在 LuaCs 1.15.4（新插件）上的构建与运行——未验证（`docs/luacs/COMPARE_PLUGIN.md`）。
+- **原样包。** `own/BaroUI` 在 LuaCs 1.15.4（新插件）上的构建与运行——未验证（`docs/luacs/COMPARE_PLUGIN.md`）。
 
 ---
 
@@ -1949,7 +1962,7 @@ AUDIT C 中的旧上限（第 7–8 条：每个 16 MB 的遮罩最多 256 个�
 
 - 包的 `filelist.xml` 中的版本：`gameversion="1.13.5.0"`（2026-11-16 之前为 1.13.4.0）。
 - LuaCs 分支（`forks/LuaCs`，在菜单中运行模组）是在游戏 **1.13.5.0** 上构建的（`docs/HANDOFF.md`，第 4.1 节与第 0 节）。包元数据中的版本（1.13.4.0）与分支构建所用的版本（1.13.5.0）不一致。这对游戏意味着什么——未验证（由所有者决定写哪个版本）。
-- **所有者已于 2026-11-16 决定：**包的 `gameversion` 已提升为 1.13.5.0，与分支一致。原先的记录： **所有者的未决决定**（核对第 19 条，2026-11-16）：在所有者决定包与分支使用哪个游戏版本之前，不修改 `own/BBE_UI/filelist.xml` 中的 `gameversion`（1.13.4.0）。核对期间未修改代码或 `filelist.xml`。
+- **所有者已于 2026-11-16 决定：**包的 `gameversion` 已提升为 1.13.5.0，与分支一致。原先的记录： **所有者的未决决定**（核对第 19 条，2026-11-16）：在所有者决定包与分支使用哪个游戏版本之前，不修改 `own/BaroUI/filelist.xml` 中的 `gameversion`（1.13.4.0）。核对期间未修改代码或 `filelist.xml`。
 - 新版 LuaCs 插件（`LuaCsForBarotraumaPlugin`）以游戏 1.15.4.0 为目标（`docs/luacs/COMPARE_PLUGIN.md`，第 0 节）。
 
 ### 12.2. LuaCs：BBE 分支与标准版
@@ -1961,11 +1974,11 @@ AUDIT C 中的旧上限（第 7–8 条：每个 16 MB 的遮罩最多 256 个�
 | 游戏补丁 | 分支修改游戏文件：在 `build client\|server` 之前执行 `py -X utf8 tools/engine.py save-patch`（构建会清除补丁），然后 `install-client`（`HANDOFF`，第 3 节） | 不需要 |
 | 分支 | `luacs/bbe`、`moonsharp/bbe`，位于 `Nice2Live/Barotrauma-Beyond-the-Europa`（`HANDOFF`，第 0 节） | — |
 
-`own/BBE_UI` 包只在 `Api/BaroUi.cs` 中设置 Harmony 前缀（`harmony.Patch`，第 45–52 行）：针对 `DebugConsole.AddToGUIUpdateList` 与暂停菜单（第 1.3 节）。在 `CSharp/` 中未发现其他补丁（通过搜索 `harmony` 核对）。这些目标与 LuaCs 运行的游戏版本是否吻合——（「未核对代码」：每个版本）。
+`own/BaroUI` 包只在 `Api/BaroUi.cs` 中设置 Harmony 前缀（`harmony.Patch`，第 45–52 行）：针对 `DebugConsole.AddToGUIUpdateList` 与暂停菜单（第 1.3 节）。在 `CSharp/` 中未发现其他补丁（通过搜索 `harmony` 核对）。这些目标与 LuaCs 运行的游戏版本是否吻合——（「未核对代码」：每个版本）。
 
 ### 12.3. 新版 LuaCs 插件
 
-新版 LuaCs 插件（`Luatrauma/LuaCsForBarotraumaPlugin`）不是游戏的分支：它通过插件加载器与 Harmony 接入，以游戏 1.15.4.0 为目标，因此我们的 1.13.5 分支不能直接移植；`own/BBE_UI` 按 `ModConfig.xml` 格式与 Harmony 目标可能会加载，但未在 1.15.4 上验证（`docs/luacs/COMPARE_PLUGIN.md`，第 0 节，第 1–6 条）。
+新版 LuaCs 插件（`Luatrauma/LuaCsForBarotraumaPlugin`）不是游戏的分支：它通过插件加载器与 Harmony 接入，以游戏 1.15.4.0 为目标，因此我们的 1.13.5 分支不能直接移植；`own/BaroUI` 按 `ModConfig.xml` 格式与 Harmony 目标可能会加载，但未在 1.15.4 上验证（`docs/luacs/COMPARE_PLUGIN.md`，第 0 节，第 1–6 条）。
 
 ### 12.4. 版本与名称
 

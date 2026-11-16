@@ -4,15 +4,15 @@
 
 ![A dashboard made with BaroUI](docs/example_shot.png)
 
-*The example mod in `examples/BaroUI_Example`, rendered by the engine's painter outside the game.*
+*The example mod in `examples/BaroUI_Example` in its three languages (one at a time: RU / EN / 中文), rendered by the engine's painter outside the game.*
 
-Version **0.2.0** — the first release. Namespace `BaroUI`, package **Baro-UI**. It grew inside the modpack *Barotrauma: Beyond the Europa*, where more than a dozen packages use it for their windows.
+Version **0.3.0**. On the Steam Workshop: [BaroUI — HTML/CSS UI framework](https://steamcommunity.com/sharedfiles/filedetails/?id=3840968580). Namespace `BaroUI`, package **Baro-UI**. It grew inside the modpack *Barotrauma: Beyond the Europa*, where more than a dozen packages use it for their windows.
 
 ## What it can do
 
 - **Layout:** block, inline, flex, grid, relative/absolute positioning, `position: sticky`, scrolling, `line-clamp`, word wrap with Russian typography rules.
-- **Styling:** cascade with specificity and variables; `:hover`, `:active`, `:focus`, `:focus-within`, `:not()`, `:has()`, `+`, `~`, `::before` / `::after`; per-corner radii, `box-shadow` with blur, `linear-gradient` (any angle), `radial-gradient`, several background layers, `outline`, `text-shadow`, `text-decoration`, background images, `<img>` with its natural size, 9-slice `border-image`, game sprites. Edges of corners, rings and circles are anti-aliased analytically.
-- **Text and icons:** JetBrains Mono, PT Serif, Caveat and Noto Sans (from the game folder); icons by name from Lucide (`<i data-icon="trash-2">`, `content: icon("…")`).
+- **Styling:** cascade with specificity and variables; `:hover`, `:active`, `:focus`, `:focus-within`, `:not()`, `:has()`, `+`, `~`, `::before` / `::after`; per-corner radii, `box-shadow` with blur, `linear-gradient` (any angle), `radial-gradient`, several background layers, `outline`, `text-shadow`, `text-decoration`, background images, `<img>` with its natural size, 9-slice `border-image`, game sprites. Edges of corners, rings and circles are anti-aliased analytically; `overflow: hidden|auto` with `border-radius` clips the children to the rounded shape.
+- **Text and icons:** JetBrains Mono, PT Serif, Caveat, Noto Sans and Noto Sans SC for Chinese (both from the game folder); **your mod's own fonts** with `@font-face` (the file lives in your package) or `BaroUi.RegisterFont`; icons by name from Lucide (`<i data-icon="trash-2">`, `content: icon("…")`).
 - **Animation:** transitions (including `box-shadow` and colours) and `@keyframes`.
 - **Media:** `<video>` with WebM through the game's own decoder (autoplay, loop, muted, poster; decoding only while visible).
 - **Charts:** `<chart>` (line, area, bar, step, axes, hover tooltip), editable `<curve>` (drag points; the same curve is evaluated by `PointCurve` in game code), `<gauge>` (dial with zones), and a drawing kit for your own `<canvas>`.
@@ -29,7 +29,7 @@ What it does **not** do (yet), with the reasons, is listed in the reference, sec
 
 ## Install
 
-Put this repository (or the `BaroUI.zip` of the release) into the game's `LocalMods` folder, e.g. `LocalMods/BaroUI`, and enable **Baro-UI** above the mods that use it. On the Workshop, a mod that uses BaroUI lists it as a required item.
+Subscribe on the [Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3840968580), or put this repository (or the `BaroUI-x.y.z.zip` of a release) into the game's `LocalMods` folder, e.g. `LocalMods/BaroUI`, and enable **Baro-UI** above the mods that use it. On the Workshop, a mod that uses BaroUI lists it as a required item.
 
 ## Use it from your mod
 
@@ -45,7 +45,7 @@ public sealed class FuelView : BaroUiView
 }
 
 // at start: refuse to run on an older engine, with one clear line in the log
-if (!BaroUi.Requires("0.2.0", "My mod")) return;
+if (!BaroUi.Requires("0.3.0", "My mod")) return;
 BaroUi.Open<FuelView>(Path.Combine(myPackageDir, "UI", "fuel.html"));
 ```
 
@@ -71,7 +71,7 @@ The documents were written in the modpack repository: a path `own/BBE_UI/…` in
 
 ## Status
 
-0.2.0 is tested by about 9 000 automated checks of the engine core and by the engine's painter outside the game. Several features are **not verified in the game yet** (video sound and looping, mouse buttons 4/5, the example mod, charts in a live window, gauges, slot frames); the reference marks each of them.
+0.3.0 is tested by about 9 000 automated checks of the engine core and by the engine's painter outside the game. Several features are **not verified in the game yet** (video sound and looping, mouse buttons 4/5, the example mod, charts in a live window, gauges, slot frames, mod fonts, rounded clipping); the reference marks each of them.
 
 ## Console
 
