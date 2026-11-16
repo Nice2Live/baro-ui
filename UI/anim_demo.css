@@ -1,0 +1,49 @@
+/* Animation demo (anim_demo.html). Units: 1u = min(screen w / 1600, h / 900). */
+:root {
+  --bg: #0b1418; --panel: #102026; --line: #2b5a60; --accent: #40c8be; --text: #d8e6e6; --dim: #8aa4a5;
+  color: var(--text); font-size: 13u; line-height: 1.3;
+}
+@keyframes appear { from { opacity: 0; translate: 0 16u } to { opacity: 1; translate: 0 0 } }
+@keyframes pulse { from { background-color: #17353a } to { background-color: #226a6c } }
+
+#window {
+  position: absolute; left: 200u; top: 90u; width: 1200u; height: 720u;
+  padding: 16u 20u; background-color: var(--bg); border: 2u solid var(--line); border-radius: 8u;
+  animation: appear 0.25s ease-out;
+}
+h1 { font-size: 20u; color: var(--accent); margin: 0 0 4u 0; }
+h2 { font-size: 12u; color: var(--dim); margin: 12u 0 6u 0; }
+.hint { color: var(--dim); margin: 0 0 10u 0; }
+#cols { display: flex; gap: 24u; }
+.col { flex: 1; min-width: 0; }
+
+.row {
+  height: 34u; overflow: hidden; margin-bottom: 6u; padding: 8u 12u;
+  background-color: var(--panel); border: 1u solid var(--line); border-radius: 4u;
+}
+.row .name { color: var(--accent); }
+.row .more { margin-top: 8u; color: var(--text); }
+.row:hover { height: 104u; border-color: var(--accent); }
+.glide { transition: layout 0.25s ease-out; }
+.steppy { transition: height 0.25s ease-out; layout-fps: 10; }
+.smooth { transition: height 0.25s ease-out; }
+
+.chips { display: flex; gap: 8u; margin-top: 10u; }
+.chip {
+  width: 64u; height: 40u; padding: 10u 0; text-align: center;
+  background-color: var(--panel); border: 1u solid var(--line); border-radius: 4u;
+}
+.chip:hover { width: 180u; border-color: var(--accent); }
+
+.cards { display: flex; gap: 10u; }
+.card {
+  flex: 1; padding: 14u 10u; text-align: center; background-color: var(--panel); border: 1u solid var(--line); border-radius: 4u;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s, translate 0.2s ease-out, opacity 0.3s;
+}
+.card:hover { background-color: #1d3f45; border-color: var(--accent); color: #ffffff; }
+.lift:hover { translate: 0 -8u; }
+.fade { opacity: 1; }
+.fade:hover { opacity: 0.35; }
+
+.pulse { padding: 12u; border: 1u solid var(--line); border-radius: 4u; animation: pulse 1s ease-in-out infinite alternate; }
+.type { margin-top: 10u; padding: 12u; color: var(--dim); typewriter: 40; }

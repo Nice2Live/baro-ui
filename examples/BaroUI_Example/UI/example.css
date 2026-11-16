@@ -1,0 +1,399 @@
+/* Baro-UI example: a submarine status dashboard on the BBE UI engine (1u = 1/1600 of the canvas width, see docs/ui/AUTHORING.md).
+   Colours are custom properties on :root, so a mod can re-skin the page in one place. Text: Noto Sans (prose), JetBrains Mono (numbers). */
+:root {
+  --bg-0: #070d12;
+  --bg-1: #0d1821;
+  --card-a: #16252e;
+  --card-b: #0e1820;
+  --well: #0a1218;
+  --edge: #2a4550;
+  --teal: #3fb6a8;
+  --teal-hi: #7fe3d4;
+  --amber: #e8b04a;
+  --red: #e0605a;
+  --green: #5fbf8a;
+  --text: #e6f0f0;
+  --dim: #8aa3a8;
+  --faint: #5d7a80;
+  --series-1: #3fb6a8;
+  --series-2: #e8b04a;
+  --grid-color: #1b2e36;
+  --stroke-width: 2;
+  --point-size: 10;
+  --point-color: #e6f0f0;
+  --zone-0: #3fb6a8;
+  --zone-1: #e8b04a;
+  --zone-2: #e0605a;
+  --track-color: #1b2e36;
+  --track-width: 12;
+  --needle: #e6f0f0;
+  --tick-color: #5d7a80;
+  color: var(--text);
+  font-family: "Noto Sans";
+  font-size: 14u;
+  line-height: 1.3;
+}
+
+#window {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1600u;
+  height: 900u;
+  display: flex;
+  flex-direction: column;
+  gap: 16u;
+  padding: 24u;
+  background-color: var(--bg-0);
+  background-image: radial-gradient(circle at 18% -10%, rgba(63, 182, 168, 0.20), rgba(63, 182, 168, 0) 46%),
+                    linear-gradient(to bottom, #0d1821, #070d12);
+}
+
+/* ---------------------------------------------------------------- header */
+
+.top {
+  display: flex;
+  align-items: center;
+  gap: 14u;
+  height: 80u;
+  padding: 0 22u;
+  border-radius: 18u;
+  background-image: linear-gradient(to right, rgba(63, 182, 168, 0.16), rgba(63, 182, 168, 0) 60%),
+                    linear-gradient(to bottom, #15242d, #0f1b23);
+  border: 1u solid var(--edge);
+  box-shadow: 0 10u 28u rgba(0, 0, 0, 0.35);
+}
+.logo {
+  width: 52u;
+  height: 52u;
+  border-radius: 15u;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26u;
+  color: #04191a;
+  background-image: linear-gradient(135deg, #7fe3d4, #2f9e92);
+  box-shadow: 0 6u 16u rgba(63, 182, 168, 0.35);
+}
+.names { display: flex; flex-direction: column; gap: 2u; }
+.names h1 { margin: 0; font-size: 26u; font-weight: bold; text-shadow: 0 2u 0 rgba(0, 0, 0, 0.35); }
+.sub { color: var(--dim); font-size: 13u; }
+.grow { flex: 1; }
+.status {
+  display: flex;
+  align-items: center;
+  gap: 9u;
+  height: 34u;
+  padding: 0 14u;
+  border-radius: 17u;
+  background-color: rgba(63, 182, 168, 0.12);
+  border: 1u solid rgba(63, 182, 168, 0.30);
+  color: var(--teal-hi);
+  font-size: 13u;
+}
+.live {
+  width: 9u;
+  height: 9u;
+  border-radius: 5u;
+  background-color: var(--teal-hi);
+  animation: pulse 1.8s ease-in-out infinite;
+}
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.25; }
+  100% { opacity: 1; }
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  gap: 8u;
+  height: 40u;
+  padding: 0 16u;
+  border-radius: 12u;
+  border: 1u solid var(--edge);
+  background-color: #132129;
+  color: var(--text);
+  font-size: 14u;
+  cursor: pointer;
+  transition: background-color 0.15s ease-out, border-color 0.15s ease-out, translate 0.15s ease-out;
+}
+.btn:hover { background-color: #1b2e37; border-color: var(--teal); }
+.btn:active { translate: 0 1u; }
+.btn.primary {
+  color: #04191a;
+  border-color: transparent;
+  background-image: linear-gradient(to bottom, #5fd6c6, #2f9e92);
+  box-shadow: 0 6u 16u rgba(63, 182, 168, 0.30);
+}
+.btn.primary:hover { background-image: linear-gradient(to bottom, #7fe3d4, #3fb6a8); }
+.btn i { font-size: 16u; }
+
+.close {
+  width: 40u;
+  height: 40u;
+  border-radius: 12u;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--dim);
+  cursor: pointer;
+  transition: background-color 0.15s ease-out, color 0.15s ease-out;
+}
+.close:hover { background-color: rgba(224, 96, 90, 0.25); color: #ffffff; }
+
+/* ---------------------------------------------------------------- grid of cards */
+
+#grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 256u 240u 1fr;
+  gap: 16u;
+}
+/* placement: grid-row is not supported (docs/ui/REFERENCE.ru.md 4.6.1), so the cards keep the order of the markup and only the columns are set */
+.depth { grid-column: 1; }
+.power { grid-column: 2 / span 2; }
+.batt { grid-column: 1; }
+.ballast { grid-column: 2; }
+.controls { grid-column: 3; }
+.list-card { grid-column: 1 / span 2; }
+.hull { grid-column: 3; }
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10u;
+  min-height: 0;
+  padding: 16u 20u;
+  border-radius: 18u;
+  border: 1u solid var(--edge);
+  background-image: radial-gradient(circle at 100% 0%, rgba(63, 182, 168, 0.10), rgba(63, 182, 168, 0) 55%),
+                    linear-gradient(160deg, var(--card-a), var(--card-b));
+  box-shadow: 0 10u 30u rgba(0, 0, 0, 0.40);
+  transition: translate 0.25s ease-out, box-shadow 0.25s ease-out, border-color 0.25s ease-out;
+}
+.card:hover {
+  translate: 0 -3u;
+  border-color: rgba(63, 182, 168, 0.45);
+  box-shadow: 0 16u 38u rgba(0, 0, 0, 0.50);
+}
+/* the accent line on top: inset from the corners, so it never meets the rounded edge */
+.card::before {
+  content: "";
+  position: absolute;
+  left: 26u;
+  right: 26u;
+  top: 0;
+  height: 3u;
+  border-radius: 0 0 3u 3u;
+  background-image: linear-gradient(to right, var(--teal), rgba(63, 182, 168, 0));
+}
+.card-h { display: flex; align-items: center; gap: 12u; }
+.ico {
+  width: 34u;
+  height: 34u;
+  border-radius: 11u;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--teal-hi);
+  background-color: rgba(63, 182, 168, 0.14);
+  border: 1u solid rgba(63, 182, 168, 0.25);
+}
+.ico i { font-size: 18u; }
+.ttl { display: flex; flex-direction: column; gap: 1u; }
+.ttl b { font-size: 17u; font-weight: bold; }
+.en { color: var(--dim); font-size: 12u; }
+.en2 { color: var(--dim); font-size: 12u; margin-left: 8u; }
+.caption { color: var(--faint); font-size: 12u; }
+.mono { font-family: mono; }
+.legend { display: flex; align-items: center; gap: 8u; color: var(--dim); font-size: 12u; }
+.sw { width: 12u; height: 12u; border-radius: 4u; margin-left: 6u; }
+.sw.s1 { background-color: var(--series-1); }
+.sw.s2 { background-color: var(--series-2); }
+
+/* ---------------------------------------------------------------- depth and hull gauges */
+
+gauge.gauge { display: block; height: 120u; color: var(--text); font-size: 13u; }
+.hull-g { height: 150u; --zone-0: #e0605a; --zone-1: #e8b04a; --zone-2: #3fb6a8; }
+.kpis { display: flex; gap: 10u; margin-top: auto; }
+.total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding: 10u 12u;
+  border-radius: 12u;
+  background-color: var(--well);
+  border: 1u solid #1a2c34;
+  font-size: 13u;
+}
+.row2 { display: flex; gap: 12u; align-items: flex-end; }
+.row2 .col { flex: 1; min-width: 0; }
+.row2 .col:nth-child(2) { flex: 1.3; }
+.col { display: flex; flex-direction: column; gap: 6u; }
+.kpi {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2u;
+  padding: 9u 12u;
+  border-radius: 12u;
+  background-color: var(--well);
+  border: 1u solid #1a2c34;
+}
+.kpi .k { color: var(--dim); font-size: 12u; }
+.kpi .v { font-size: 17u; font-weight: bold; }
+
+/* ---------------------------------------------------------------- power chart, batteries */
+
+chart.chart {
+  display: block;
+  flex: 1;
+  min-height: 0;
+  background-color: var(--well);
+  border-radius: 12u;
+  color: var(--dim);
+  font-size: 11u;
+}
+.bats { display: flex; flex-direction: column; gap: 14u; padding-top: 4u; }
+.bl { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6u; font-size: 13u; }
+.bn { color: var(--text); }
+.bar {
+  height: 12u;
+  border-radius: 6u;
+  background-color: var(--well);
+  border: 1u solid #1a2c34;
+  overflow: hidden;
+}
+.bar.small { display: inline-block; vertical-align: middle; width: 120u; height: 8u; border-radius: 4u; margin-right: 8u; } /* a span: inline boxes ignore width and height */
+.bar.small .fill { border-radius: 3u; }
+.fill {
+  display: block;
+  height: 100%;
+  border-radius: 5u;
+  background-image: linear-gradient(to right, #2f9e92, #7fe3d4);
+  transition: background-color 0.3s ease-out;
+}
+.fill.low { background-image: linear-gradient(to right, #b5483f, #e0605a); }
+.bat:hover .fill { background-image: linear-gradient(to right, #3fb6a8, #a8f0e4); }
+
+/* ---------------------------------------------------------------- ballast curve, controls */
+
+curve.curve {
+  display: block;
+  flex: 1;
+  min-height: 0;
+  background-color: var(--well);
+  border: 1u solid #1a2c34;
+  border-radius: 12u;
+  --series-1: #e8b04a;
+}
+select {
+  height: 36u;
+  padding: 0 12u;
+  border-radius: 10u;
+  border: 1u solid var(--edge);
+  background-color: var(--well);
+  color: var(--text);
+}
+input[type=range] { width: 100%; height: 18u; accent-color: var(--teal); }
+.field { color: var(--dim); font-size: 12u; }
+select { width: 100%; }
+.opts { display: flex; gap: 8u; }
+.opt {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8u;
+  height: 36u;
+  padding: 0 10u;
+  border-radius: 10u;
+  background-color: var(--well);
+  border: 1u solid #1a2c34;
+  font-size: 12u;
+  cursor: pointer;
+  transition: border-color 0.15s ease-out, background-color 0.15s ease-out;
+}
+.opt:hover { border-color: var(--edge); }
+.opt:has(input:checked) { border-color: rgba(63, 182, 168, 0.60); background-color: #123031; }
+.seg { display: flex; gap: 6u; }
+.seg-i {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1u;
+  height: 46u;
+  border-radius: 10u;
+  background-color: var(--well);
+  border: 1u solid #1a2c34;
+  font-size: 12u;
+  cursor: pointer;
+  transition: background-color 0.15s ease-out, border-color 0.15s ease-out;
+}
+.seg-i:hover { border-color: var(--edge); }
+.seg-i:has(input:checked) { background-color: var(--teal); border-color: transparent; color: #04191a; font-weight: bold; }
+.seg-i .s-ru { font-size: 12u; }
+.seg-i .s-en { font-size: 10u; color: var(--dim); }
+.seg-i:has(input:checked) .s-en { color: #0b3a38; }
+
+/* ---------------------------------------------------------------- compartments list */
+
+.list-card { min-height: 0; }
+.list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  border-radius: 12u;
+  background-color: var(--well);
+  border: 1u solid #1a2c34;
+}
+.tr {
+  display: flex;
+  align-items: center;
+  height: 34u;
+  padding: 0 14u;
+  border-top: 1u solid #142229;
+  font-size: 13u;
+  transition: background-color 0.15s ease-out;
+}
+.tr:hover { background-color: #132a33; }
+.tr.th {
+  position: sticky;
+  top: 0;
+  height: 30u;
+  border-top: none;
+  border-bottom: 1u solid #22414a;
+  background-color: #10202a;
+  color: var(--dim);
+  font-size: 11u;
+  z-index: 1;
+}
+.tr.th:hover { background-color: #10202a; }
+.c-name { flex: 3; display: flex; align-items: center; min-width: 0; }
+.c-hull { flex: 3; display: flex; align-items: center; gap: 10u; }
+.c-crew { flex: 1; }
+.c-state { flex: 3; display: flex; }
+.tr:has(.pill.bad) { background-color: rgba(224, 96, 90, 0.07); }
+.tr.warnrow .c-name b { color: var(--amber); }
+.tr.badrow .c-name b { color: var(--red); }
+.pill {
+  height: 22u;
+  line-height: 22u;
+  padding: 0 10u;
+  border-radius: 11u;
+  font-size: 11u;
+}
+.pill.ok { background-color: rgba(95, 191, 138, 0.16); color: #9fe6bd; }
+.pill.warn { background-color: rgba(232, 176, 74, 0.18); color: #f3cd82; }
+.pill.bad { background-color: rgba(224, 96, 90, 0.20); color: #f5a09b; }
+
+/* ---------------------------------------------------------------- hull */
+
+.hull .caption { margin-top: auto; }

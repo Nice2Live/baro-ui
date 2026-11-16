@@ -1,0 +1,24 @@
+/* BBE UI stage D test page, on top of test.css (palette, window, panels). The code colours are the editor's custom properties (docs/ui/AUTHORING.md). */
+#window { left: 100u; top: 60u; width: 1400u; height: 780u; }
+#left { flex: 1; min-width: 0; }
+#right { flex: none; width: 420u; }
+#left .panel { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.dim { color: var(--dim); font-weight: normal; }
+
+#code {
+  flex: 1; width: 100%; min-height: 0; font-size: 13u; line-height: 18u; padding: 4u 6u;
+  background-color: #071012; border: 1u solid var(--line); border-radius: 3u; color: var(--text);
+  --code-keyword: #c586c0; --code-string: #ce9178; --code-comment: #6a8f92; --code-number: #b5cea8;
+  --code-tag: #40c8be; --code-attr: #9cdcfe; --code-entity: #d7ba7d; --code-selection: #40c8be66; --code-line: #ffffff0f;
+}
+#code:focus { border-color: var(--accent); }
+
+#pad { width: 100%; height: 150u; border: 1u solid var(--line); border-radius: 4u; background-color: #071012; }
+#pic { width: 100%; height: 120u; border: 1u solid var(--line); border-radius: 4u; background-color: #071012; }
+
+#drop {
+  padding: 16u 10u; text-align: center; color: var(--dim); background-color: #0b1418;
+  border: 2u solid #2b5a60; border-radius: 6u;
+}
+#drop:focus { border-color: var(--accent); color: var(--text); }
+#dropped { margin-top: 6u; color: var(--ok); font-size: 11u; }

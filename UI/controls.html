@@ -1,0 +1,80 @@
+<!-- BBE UI stage 5 test page: form controls, dropdown, modal dialog, item icons, canvas, a 2000-row virtual list.
+     C# side: SelfTest.ControlsView (bbe_ui open controls). -->
+<html>
+<head>
+  <title>BBE UI controls</title>
+  <link rel="stylesheet" href="test.css">
+  <link rel="stylesheet" href="controls.css">
+</head>
+<body>
+<div id="window">
+  <div id="title">
+    <h1>ЭЛЕМЕНТЫ УПРАВЛЕНИЯ</h1>
+    <span class="badge">BBE UI · этап 5</span>
+    <span class="grow"></span>
+    <span id="status">{{status}}</span>
+    <div class="close" id="close" onclick="close()" title="Закрыть (Esc)">✕</div>
+  </div>
+  <div id="body">
+    <div id="left">
+      <div class="panel form">
+        <h2>ПОЛЯ</h2>
+        <label for="name">Позывной <u>N</u></label>
+        <input id="name" data-model="name" placeholder="введите позывной" maxlength="24" accesskey="n" title="Не длиннее 24 знаков">
+        <label for="qty">Количество (1–10)</label>
+        <input id="qty" type="number" min="1" max="10" step="1" data-model="qty">
+        <label class="check" id="armed-label"><input type="checkbox" id="armed" data-model="armed"> Боевая готовность</label>
+        <label for="mode">Режим</label>
+        <select id="mode" data-model="mode" title="Колесо мыши листает список">
+          <option value="patrol">Патруль</option>
+          <option value="hunt">Охота</option>
+          <option value="tow">Буксировка</option>
+          <option value="repair">Ремонт</option>
+          <option value="dock">Стыковка</option>
+          <option value="silent">Тихий ход</option>
+          <option value="dive">Погружение</option>
+          <option value="rise">Всплытие</option>
+          <option value="anchor">Якорь</option>
+          <option value="off" disabled>Выключено</option>
+        </select>
+        <label>Заряд батарей {{charge}} %</label>
+        <progress id="charge" value="{{charge}}" max="100"></progress>
+        <label>Громкость {{volume}} % (ползунок: мышь, стрелки, Home/End)</label>
+        <input type="range" id="volume" min="0" max="100" step="5" data-model="volume">
+        <label>Ожидание</label>
+        <progress id="wait"></progress>
+        <div class="buttons">
+          <button class="btn" id="open-confirm" onclick="showModal('confirm')" accesskey="o" title="Окно подтверждения (Alt+O)">Подтвердить…</button>
+          <button class="btn" id="charge-up" onclick="charge(10)">Заряд +10</button>
+        </div>
+      </div>
+    </div>
+    <div id="right">
+      <div class="panel">
+        <h2>ПРЕДМЕТЫ И ХОЛСТ</h2>
+        <div class="items">
+          <item prefab="oxygentank" count="3" title="Кислородный баллон"></item>
+          <item prefab="weldingtool" title="Сварочный аппарат"></item>
+          <item prefab="plasmacutter" title="Плазменный резак"></item>
+          <item prefab="divingmask" count="2" title="Водолазная маска"></item>
+          <item prefab="fuelrod" count="12" title="Топливный стержень"></item>
+          <canvas id="scope" title="Холст: рисует C#"></canvas>
+        </div>
+      </div>
+      <div class="panel" id="rows">
+        <div class="vrow" data-for="r in rows" data-key="r.id"><span class="n">{{r.id | 0000}}</span><span class="name">{{r.name}}</span></div>
+      </div>
+    </div>
+  </div>
+  <dialog id="confirm" onclose="dialogClosed()">
+    <h2>ПОДТВЕРЖДЕНИЕ</h2>
+    <p>Записать заметку в судовой журнал?</p>
+    <input id="note" data-model="note" autofocus placeholder="заметка">
+    <div class="buttons end">
+      <button class="btn" id="cancel" onclick="closeDialog()">Отмена</button>
+      <button class="btn primary" id="ok" data-default onclick="confirmNote()">Записать</button>
+    </div>
+  </dialog>
+</div>
+</body>
+</html>

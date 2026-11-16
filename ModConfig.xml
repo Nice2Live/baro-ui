@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ModConfig instead of RunConfig: a RunConfig package compiles as "InternalsAwareAssembly" like every other legacy
+     mod, and LuaCs resolves cross-package references by assembly FullName, so other packages could not tell this
+     one apart. FriendlyName gives the engine its own name (docs/ui/RECON.md). -->
+<ModConfig>
+  <Assembly Folder="%ModDir%/CSharp/Shared" IsScript="true" FriendlyName="BaroUI" />
+  <Assembly Folder="%ModDir%/CSharp/Client" IsScript="true" FriendlyName="BaroUI" Target="Client" />
+</ModConfig>

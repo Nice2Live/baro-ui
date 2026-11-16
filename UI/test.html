@@ -1,0 +1,79 @@
+<!-- BBE UI stage 3-4 test page; C# side: SelfTest.TestView (bbe_ui open test). Same file renders in Chrome via tools/ui_test/layout/preview.html. -->
+<html>
+<head>
+  <title>BBE UI test</title>
+  <link rel="stylesheet" href="test.css">
+</head>
+<body>
+<div id="window">
+  <div id="title">
+    <h1>СУДОВОЙ ТЕРМИНАЛ</h1>
+    <span class="badge">BBE UI · этап 3</span>
+    <span class="badge warn">№ 7 ▲ 12 ▼ 3</span>
+    <span class="badge bad" id="alarm" data-if="alarm">ТРЕВОГА</span>
+    <span class="grow"></span>
+    <span id="net">сеть: {{net.value}}</span>
+    <span>CO₂ 0.4 %</span>
+    <div class="close" id="close" onclick="close()">✕</div>
+  </div>
+  <div id="body">
+    <div id="left">
+      <div class="panel">
+        <h2>КНОПКИ И СОСТОЯНИЯ</h2>
+        <div class="buttons">
+          <div class="btn" id="btn-a" onclick="select(this)">Курс →</div>
+          <div class="btn selected" id="btn-b" onclick="select(this)">Реактор ●</div>
+          <div class="btn" id="btn-c" disabled>Отключено</div>
+          <div class="btn" id="btn-d" onclick="select(this)">Насосы</div>
+        </div>
+      </div>
+      <div class="panel" id="list">
+        <div class="row" data-for="m in modules" data-key="m.id" data-class="low: m.value &lt; 20" onclick="pick(m.id)"><span class="n">{{m.id | 00}}</span><span class="name">{{m.name}}</span><span class="v">{{m.value}} %</span></div>
+      </div>
+    </div>
+    <div id="right">
+      <div class="panel">
+        <h2>СКРУГЛЕНИЯ И ПРОЗРАЧНОСТЬ</h2>
+        <div class="radii">
+          <div style="border-radius: 0">0</div>
+          <div style="border-radius: 2u">2</div>
+          <div style="border-radius: 4u">4</div>
+          <div style="border-radius: 8u">8</div>
+          <div style="border-radius: 18u">18</div>
+          <div class="half" style="border-radius: 8u">50 %</div>
+          <div style="background-color: #e0505080; border-color: #e05050">rgba</div>
+          <div style="border-width: 1u 4u 1u 4u; border-color: #e0a040 #60d080">sides</div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>СЕТКА РЕЦЕПТОВ</h2>
+        <div id="tiles">
+          <div class="tile"><div class="t">Сталь</div><span class="q">×4</span></div>
+          <div class="tile"><div class="t">Медь</div><span class="q">×2</span></div>
+          <div class="tile"><div class="t">Титан</div><span class="q">×1</span></div>
+          <div class="tile"><div class="t">Пластик</div><span class="q">×6</span></div>
+          <div class="tile"><div class="t">Резина</div><span class="q">×3</span></div>
+          <div class="tile"><div class="t">Стекло</div><span class="q">×2</span></div>
+          <div class="tile"><div class="t">Уран</div><span class="q">×1</span></div>
+          <div class="tile"><div class="t">Торий</div><span class="q">×1</span></div>
+          <div class="tile"><div class="t">Фосфор</div><span class="q">×5</span></div>
+        </div>
+      </div>
+      <div class="panel text">
+        <h2>ТЕКСТ</h2>
+        <p class="mix">Обычный, <b>жирный</b>, <i>курсив</i> и <span style="color: #e05050">красный</span> в одной строке, с переносом по словам, когда строка не помещается в ширину панели целиком.</p>
+        <p class="ellipsis">Очень длинная строка без переноса, которая обрезается многоточием на правом краю панели, потому что она шире.</p>
+        <p style="font-size: 18u">Крупный 18u <span style="font-size: 10u">мелкий 10u</span></p>
+        <p class="half">Полупрозрачный абзац (opacity 0.5).</p>
+        <p>Скрытый: [<span class="hidden">невидимо</span>] — место сохранено.</p>
+      </div>
+    </div>
+  </div>
+  <div id="footer">
+    <span id="status">{{status}}</span>
+    <span>колесо — прокрутка</span>
+    <span>bbe_ui close</span>
+  </div>
+</div>
+</body>
+</html>

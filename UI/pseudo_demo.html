@@ -1,0 +1,24 @@
+<!-- Demo of ::before / ::after and :has() (docs/ui/AUTHORING.md, "Псевдоэлементы" and ":has()"): bbe_ui open pseudo_demo, Esc closes. No C# side. -->
+<html>
+<head>
+  <title>BBE UI pseudo-elements</title>
+  <link rel="stylesheet" href="pseudo_demo.css">
+</head>
+<body>
+<div id="window">
+  <h1>Псевдоэлементы и :has()</h1>
+  <p class="hint">Наведите мышь на строку: значок и подсказка меняются вместе с ней. Флажок включает режим через :has(:checked).</p>
+  <label class="flag"><input type="checkbox" id="mode"> режим тревоги</label>
+  <div class="panel" id="panel">
+    <div class="row"><span class="name">Двигатель</span><span class="del" title="Удалить"></span></div>
+    <div class="row warn"><span class="name">Шлюз</span><span class="del" title="Удалить"></span></div>
+    <p class="quote">Курс не менялся с полуночи.</p>
+  </div>
+  <div class="card" id="card">
+    <span class="tag" data-count="3">Сообщения</span>
+    <span class="note">Наведите на карточку</span>
+  </div>
+  <p class="hint">Здесь ::before и ::after добавляют кавычки и значки; в тексте страницы их нет, Query и обработчики их не видят.</p>
+</div>
+</body>
+</html>

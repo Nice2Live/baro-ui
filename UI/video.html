@@ -1,0 +1,34 @@
+<!-- Demo of <video> (docs/ui/AUTHORING.md, «Видео»): bbe_ui open video. The buttons call play(id), pause(id), restart(id): no C# side.
+     The missing clip shows the placeholder and one line in bbe_ui problems. Esc: close. -->
+<html>
+<head>
+  <title>BBE UI video</title>
+  <link rel="stylesheet" href="video.css">
+</head>
+<body>
+<div id="window">
+  <h1>Видео (WebM)</h1>
+  <p class="hint">Клип играет, пока блок на экране. Закрытие окна, bbe_ui reload и пауза выгружают декодер. Esc: закрыть.</p>
+  <div id="row">
+    <div class="cell">
+      <video id="loop" class="clip" src="media/1_portal_loop.webm" autoplay loop muted></video>
+      <p class="cap">autoplay loop muted: без звука, по кругу</p>
+    </div>
+    <div class="cell">
+      <video id="once" class="clip" src="media/1_portal_loop.webm" volume="0.5"></video>
+      <p class="cap">без autoplay, volume 0.5: кнопки ниже</p>
+    </div>
+    <div class="cell">
+      <video id="broken" class="clip" src="media/missing.webm"></video>
+      <p class="cap">файл не найден: плейсхолдер и строка в bbe_ui problems</p>
+    </div>
+  </div>
+  <div class="buttons">
+    <button class="btn" onclick="play('once')">Играть</button>
+    <button class="btn" onclick="pause('once')">Пауза</button>
+    <button class="btn" onclick="restart('once')">С начала</button>
+    <button class="btn" onclick="play('loop')">Играть loop</button>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,70 @@
+/* BBE UI stage 3 test page: every property the renderer draws. Units: 1u = min(screen w / 1600, h / 900). */
+:root {
+  --bg: #0b1418; --panel: #102026; --line: #2b5a60; --accent: #40c8be; --text: #d8e6e6; --dim: #7f9a9c;
+  --warn: #e0a040; --bad: #e05050; --ok: #60d080;
+  color: var(--text); font-size: 13u; line-height: 1.3;
+}
+#window {
+  position: absolute; left: 200u; top: 90u; width: 1200u; height: 720u;
+  display: flex; flex-direction: column;
+  background-color: var(--bg); border: 2u solid var(--line); border-radius: 8u;
+}
+#title {
+  display: flex; align-items: center; gap: 12u; padding: 8u 14u;
+  border-bottom: 1u solid var(--line); background-color: #0f1d22;
+  border-radius: 6u 6u 0 0; /* the window's radius less its border: a square corner here covers the inner arc of the window's rounded border */
+}
+#title h1 { font-size: 18u; color: var(--accent); margin: 0; }
+#title .grow { flex: 1; }
+.badge { padding: 2u 8u; border-radius: 4u; background-color: #1d3a3f; color: var(--accent); font-size: 11u; }
+.badge.warn { background-color: #3a2c12; color: var(--warn); }
+.badge.bad { background-color: #4a1616; color: #ff8080; }
+.close { width: 26u; height: 26u; text-align: center; border-radius: 4u; cursor: pointer; color: var(--dim); }
+.close:hover { background-color: var(--bad); color: #ffffff; }
+
+#body { flex: 1; display: flex; gap: 12u; padding: 12u; min-height: 0; }
+#left { width: 360u; display: flex; flex-direction: column; gap: 10u; min-height: 0; }
+#right { flex: 1; display: flex; flex-direction: column; gap: 10u; min-width: 0; }
+
+.panel { background-color: var(--panel); border: 1u solid var(--line); border-radius: 4u; padding: 8u 10u; }
+.panel h2 { font-size: 12u; color: var(--dim); margin: 0 0 6u 0; font-weight: bold; }
+
+.buttons { display: flex; flex-wrap: wrap; gap: 6u; }
+.btn {
+  padding: 5u 12u; border: 1u solid var(--line); border-radius: 4u; background-color: #14282e;
+  cursor: pointer; color: var(--text);
+}
+.btn:hover { background-color: #1d3a3f; border-color: var(--accent); }
+.btn:active { background-color: var(--accent); color: var(--bg); }
+.btn.selected { background-color: #22484d; color: var(--accent); border-color: var(--accent); }
+.btn:disabled { color: #4a5c5e; border-color: #22383c; background-color: #0f1d22; cursor: auto; }
+
+#list { flex: 1; overflow-y: auto; min-height: 0; padding: 0; scrollbar-color: var(--accent); }
+.row { display: flex; padding: 3u 10u; border-bottom: 1u solid #18323a; }
+.row:hover { background-color: #17313a; }
+.row .n { width: 40u; color: var(--dim); }
+.row .name { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.row .v { width: 60u; text-align: right; color: var(--ok); }
+.row.low .v { color: var(--bad); }
+.row { cursor: pointer; }
+
+.radii { display: flex; gap: 8u; align-items: flex-end; }
+.radii div { width: 52u; height: 36u; background-color: #1d3a3f; border: 2u solid var(--accent); text-align: center; font-size: 10u; }
+
+#tiles { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6u; }
+.tile { height: 64u; border: 1u solid var(--line); background-color: #0f1d22; padding: 4u; position: relative; }
+.tile:hover { border-color: var(--accent); }
+.tile .q { position: absolute; right: 3u; bottom: 2u; font-size: 10u; color: var(--warn); }
+.tile .t { font-size: 10u; color: var(--dim); }
+
+.text p { margin: 0 0 4u 0; }
+.mix b { color: var(--accent); }
+.mix i { color: var(--warn); }
+.ellipsis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.half { opacity: 0.5; }
+.hidden { visibility: hidden; }
+
+#footer {
+  display: flex; gap: 16u; padding: 6u 14u; border-top: 1u solid var(--line); color: var(--dim); font-size: 11u;
+}
+#status { flex: 1; color: var(--accent); }

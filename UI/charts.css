@@ -1,0 +1,25 @@
+/* BBE UI charts page (docs/ui/DESIGN_CHARTS.md 2.1 to 2.4), on top of test.css. Colours and sizes of the drawings are custom properties. */
+:root {
+  --series-1: #3fb6a8;
+  --series-2: #e0a84c;
+  --series-3: #d86a6a;
+  --grid-color: #1d3238;
+  --stroke-width: 2;
+  --point-size: 9;
+  --point-color: #e8f4f2;
+  --zone-0: #5fbf8a;
+  --zone-1: #e0b050;
+  --zone-2: #d86a6a;
+  --track-color: #22343a;
+  --track-width: 10;
+  --needle: #e8f4f2;
+  --tick-color: #8a9aa0;
+}
+#body { flex-direction: column; }
+.row { display: flex; gap: 12u; margin-bottom: 6u; }
+.cell { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6u; }
+.caption { color: var(--dim); font-size: 11u; }
+curve.curve, chart.chart, gauge.gauge { display: block; width: 100%; height: 150u; }
+curve.curve { background-color: #071012; border: 1u solid var(--line); border-radius: 4u; }
+chart.chart { background-color: #071012; border: 1u solid var(--line); border-radius: 4u; color: var(--dim); font-size: 11u; }
+gauge.gauge { color: var(--text); font-size: 12u; }

@@ -1,0 +1,56 @@
+<!-- BBE UI charts: the real cases of docs/ui/DESIGN_CHARTS.md section 7, with sample data (charts.data.json).
+     Render: tools/ui_host --page own/BBE_UI/UI/charts.html --data own/BBE_UI/UI/charts.data.json --size 1600x900 --frames 90 -->
+<html>
+<head>
+  <title>BBE UI charts</title>
+  <link rel="stylesheet" href="test.css">
+  <link rel="stylesheet" href="charts.css">
+</head>
+<body>
+<div id="window">
+  <div id="title">
+    <h1>ГРАФИКИ И ПРИБОРЫ</h1>
+    <span class="badge">BBE UI · E1–E5</span>
+    <span class="grow"></span>
+  </div>
+  <div id="body">
+    <div class="row">
+      <div class="panel cell">
+        <h2>ЗОНА ЗДОРОВЬЯ · §7 п. 1</h2>
+        <curve id="zone" class="curve" data-model="zone" x-min="7.5" x-max="72.5" y-min="0.5" y-max="3" snap="2.5 0.05" mode="smooth" monotone max-points="8"></curve>
+        <div class="caption">точки тянуть мышью; двойной щелчок — новая точка; Delete — убрать</div>
+      </div>
+      <div class="panel cell">
+        <h2>ДОХОД И ЗАТРАТЫ · §7 п. 5</h2>
+        <chart id="income" class="chart" data-series="доход: stats.income; расход: stats.loss" type="area" format="0" y-min="0"></chart>
+        <div class="caption">круглые деления по данным; наведение — подсказка с значениями</div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="panel cell">
+        <h2>ЭКИПАЖ · СТОЛБИКИ</h2>
+        <chart id="crew" class="chart" data-series="выплата: crew.pay" type="bar" format="0" y-min="0"></chart>
+        <div class="caption">столбики с округлыми концами</div>
+      </div>
+      <div class="panel cell">
+        <h2>НАВЫК И КАЧЕСТВО · §7 п. 6</h2>
+        <chart id="quality" class="chart" data-series="качество: skill.quality" type="step" format="0" y-min="0" y-max="5"></chart>
+        <div class="caption">ступенька: порог навыка → качество</div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="panel cell">
+        <h2>ГЛУБИНА · §7 п. 3</h2>
+        <gauge id="depth" class="gauge" data-model="sub.depth" min="0" max="700" zones="500" ticks="8" format="0"></gauge>
+        <div class="caption">зона предупреждения с 500 м; стрелка плавно догоняет значение</div>
+      </div>
+      <div class="panel cell">
+        <h2>РЕАКТОР · §7 п. 4</h2>
+        <gauge id="reactor" class="gauge" data-model="reactor.load" min="0" max="100" zones="60, 85" fill="sector" format="0"></gauge>
+        <div class="caption">заполненный сектор; цвет зоны — по значению</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!-- Demo of the animations (docs/ui/AUTHORING.md, "Анимации"): bbe_ui open anim_demo, hover the blocks, Esc closes. No C# side. -->
+<html>
+<head>
+  <title>BBE UI animations</title>
+  <link rel="stylesheet" href="anim_demo.css">
+</head>
+<body>
+<div id="window">
+  <h1>Анимации интерфейса</h1>
+  <p class="hint">Наведите мышь на блоки. Esc: закрыть. <b>bbe_ui anim off</b> выключает все анимации.</p>
+  <div id="cols">
+    <div class="col">
+      <h2>transition: layout. Раскладка считается один раз, дальше только картинка</h2>
+      <div class="row glide"><span class="name">Строка 1</span><div class="more">Содержимое уже лежит в конечной раскладке и открывается рамкой, как шторка. Соседи съезжают вниз вместе с ней.</div></div>
+      <div class="row glide"><span class="name">Строка 2</span><div class="more">Если увести мышь на полпути, движение развернётся с того места, где блок нарисован.</div></div>
+      <div class="row glide"><span class="name">Строка 3</span><div class="more">Кадр стоит как обычная отрисовка, на любом FPS.</div></div>
+      <div class="chips">
+        <div class="chip glide">A</div>
+        <div class="chip glide">B</div>
+        <div class="chip glide">C</div>
+      </div>
+    </div>
+    <div class="col">
+      <h2>Для сравнения: height + layout-fps 10 (раскладка 10 раз в секунду)</h2>
+      <div class="row steppy"><span class="name">Строка 4</span><div class="more">Тот же эффект старым способом: дороже и рывками.</div></div>
+      <div class="row smooth"><span class="name">Строка 5</span><div class="more">Тот же, но с обычными 30 раз в секунду (по умолчанию).</div></div>
+      <h2>Без раскладки: opacity, color, translate</h2>
+      <div class="cards">
+        <div class="card">Подсветка</div>
+        <div class="card lift">Подъём</div>
+        <div class="card fade">Затухание</div>
+      </div>
+      <h2>@keyframes и typewriter</h2>
+      <div class="pulse">Пульсация: animation infinite alternate</div>
+      <div class="type">Печатная машинка: этот текст появляется по буквам при открытии окна.</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

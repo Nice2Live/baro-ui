@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<contentpackage name="Baro-UI" modversion="0.2.0" corepackage="false" gameversion="1.13.5.0">
+  <!-- empty: synced content makes the server list this package, so a joining client keeps it above the packages that use it (deploy.py server_order) -->
+  <Item file="%ModDir%/Xml/sync.xml" />
+</contentpackage>

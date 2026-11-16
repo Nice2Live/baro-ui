@@ -1,0 +1,36 @@
+/* Demo of ::before / ::after and :has() (docs/ui/AUTHORING.md): bbe_ui open pseudo_demo */
+#window { width: 900u; height: 560u; padding: 24u; background-color: #0b1418; color: #cfe6e4; font-size: 16px; }
+h1 { font-size: 26px; margin-bottom: 8u; }
+.hint { color: #7aa3a0; margin: 8u 0; }
+
+.flag { display: inline-block; margin-bottom: 12u; cursor: pointer; }
+.flag input { width: 1em; height: 1em; }
+
+/* :has(:checked) on the panel: the flag is inside it, so the panel gets the alarm border */
+.panel { width: 560u; padding: 12u; border: 1px solid #2d4a4d; border-radius: 4px; background-color: #0f1d21; }
+.panel:has(:checked) { border-color: #c44; }
+
+.row { display: flex; align-items: center; height: 36u; border-bottom: 1px solid #1d3a3f; }
+.row .name { flex: 1 1 0; }
+/* a row with a warning: :has(> .name) is a child match, the warn class is a plain one */
+.row.warn:has(> .name) { background-color: #2a1a1a; }
+
+/* a delete icon: an inline-block ::before, the icon is the Lucide glyph */
+.del { display: inline-block; width: 28u; height: 28u; color: #7aa3a0; cursor: pointer; }
+.del::before { content: icon("trash-2"); }
+.del:hover::before { color: #f88; }
+
+/* quotes from the content string, with escapes */
+.quote::before { content: "\201C"; color: #40c8be; }
+.quote::after { content: "\201D"; color: #40c8be; }
+
+/* the count from an attribute, after the text, as a small badge */
+.tag { display: inline-block; padding: 2u 8u; border-radius: 10px; background-color: #1d3a3f; }
+.tag::after { content: attr(data-count); display: inline-block; margin-left: 6u; padding: 0 6u; border-radius: 9px; background-color: #40c8be; color: #0b1418; }
+
+/* :has(:hover) on the card: the card's note turns green while a child is hovered */
+.card { margin-top: 12u; padding: 12u; border: 1px solid #2d4a4d; border-radius: 4px; }
+.card:has(:hover) { border-color: #40c8be; }
+.card:has(:hover) .note { color: #40c8be; }
+.note::before { content: "\2192 "; }
+.note:hover::after { content: " (наведено)"; }

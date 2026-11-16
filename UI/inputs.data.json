@@ -1,0 +1,8 @@
+{
+  "code": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!-- demo text -->\n<Items>\n  <Item identifier=\"item1\" tags=\"a,b\" maxstacksize=\"1\">\n    <Price baseprice=\"7\" />\n  </Item>\n</Items>\n",
+  "status": "Ввод: код, мышь на холсте, картинка, файл",
+  "lang": "xml",
+  "lines": 7,
+  "dropped": "",
+  "qty": 4
+}

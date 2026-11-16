@@ -1,0 +1,44 @@
+<!-- BBE UI stage D test page: the code editor (textarea), a canvas with the mouse, a picture on a canvas, a file target.
+     C# side: SelfTest.InputsView (bbe_ui open inputs); the in-game checks are in Api/SelfTestInput.cs. -->
+<html>
+<head>
+  <title>BBE UI inputs</title>
+  <link rel="stylesheet" href="test.css">
+  <link rel="stylesheet" href="inputs.css">
+</head>
+<body>
+<div id="window">
+  <div id="title">
+    <h1>РЕДАКТОР КОДА, ХОЛСТ, ФАЙЛЫ</h1>
+    <span class="badge">BBE UI · этап D</span>
+    <span class="grow"></span>
+    <span id="status">{{status}}</span>
+    <div class="close" id="close" onclick="close()" title="Закрыть (Esc)">✕</div>
+  </div>
+  <div id="body">
+    <div id="left">
+      <div class="panel tools">
+        <h2>РЕДАКТОР <span class="dim">{{lang}} · {{lines}} строк</span></h2>
+        <textarea id="code" data-lang="xml" data-model="code" oninput="edited()" onsave="saved()" placeholder="Пусто: начните вводить"></textarea>
+        <label class="num">Число (колесо мыши): <input type="number" id="qty" data-model="qty" min="0" max="10" step="1"></label>
+      </div>
+    </div>
+    <div id="right">
+      <div class="panel">
+        <h2>ХОЛСТ С МЫШЬЮ</h2>
+        <canvas id="pad"></canvas>
+      </div>
+      <div class="panel">
+        <h2>КАРТИНКА ИЗ ФАЙЛА</h2>
+        <canvas id="pic"></canvas>
+      </div>
+      <div class="panel">
+        <h2>ФАЙЛ</h2>
+        <div id="drop" tabindex="0">Перетащите сюда файл (.png, .jpg, .xml) или нажмите здесь и Ctrl+V</div>
+        <div id="dropped">{{dropped}}</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

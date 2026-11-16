@@ -1,0 +1,24 @@
+/* Video demo (video.html). Units: 1u = min(screen w / 1600, h / 900). */
+:root {
+  --bg: #0b1418; --panel: #102026; --line: #2b5a60; --accent: #40c8be; --text: #d8e6e6; --dim: #8aa4a5;
+  color: var(--text); font-size: 13u; line-height: 1.3;
+}
+
+#window {
+  position: absolute; left: 200u; top: 120u; width: 1200u; height: 600u;
+  padding: 16u 20u; background-color: var(--bg); border: 2u solid var(--line); border-radius: 8u;
+}
+h1 { font-size: 20u; color: var(--accent); margin: 0 0 4u 0; }
+.hint { color: var(--dim); margin: 0 0 14u 0; }
+
+#row { display: flex; gap: 24u; }
+.cell { flex: 1; min-width: 0; }
+/* only the width is given: the height is the clip's own proportions (the natural size from its WebM header) */
+.clip { width: 340u; background-color: #000000; border: 1u solid var(--line); }
+.cap { color: var(--dim); margin: 8u 0 0 0; }
+
+.buttons { margin-top: 22u; display: flex; gap: 10u; }
+.btn {
+  padding: 8u 16u; background-color: var(--panel); border: 1u solid var(--line); border-radius: 4u; color: var(--text);
+}
+.btn:hover { border-color: var(--accent); color: var(--accent); }
