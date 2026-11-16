@@ -2,9 +2,9 @@
 
 **HTML/CSS UI framework for Barotrauma.** Write a window as an ordinary `.html` page with a `.css` sheet and drive it from a C# class; BaroUI lays it out and draws it with the game's own sprite batch. There is no browser inside the game: BaroUI is its own layout and paint engine written for the game loop (no allocations in a steady frame, restyles limited to what changed).
 
-![A dashboard made with BaroUI](docs/example_shot.png)
+![A dashboard made with BaroUI](docs/example_shot_en.png)
 
-*The example mod in `examples/BaroUI_Example` in its three languages (one at a time: RU / EN / 中文), rendered by the engine's painter outside the game.*
+*The example mod in `examples/BaroUI_Example` (its English version), rendered by the engine's painter outside the game.*
 
 Version **0.3.0**. On the Steam Workshop: [BaroUI — HTML/CSS UI framework](https://steamcommunity.com/sharedfiles/filedetails/?id=3840968580). Namespace `BaroUI`, package **Baro-UI**. It grew inside the modpack *Barotrauma: Beyond the Europa*, where more than a dozen packages use it for their windows.
 
